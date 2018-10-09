@@ -18,7 +18,13 @@ var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
 
-// HANDLE KEYBOARD 
+// HANDLE CONTROLS
+
+// Key IDs
+var left_keyid = 37;
+var right_keyid = 39;
+var enter_keyid = 13;
+
 var keysDown = {}; //Array of keys down
 
 addEventListener("keydown", function (e) {
@@ -27,6 +33,38 @@ addEventListener("keydown", function (e) {
 
 addEventListener("keyup", function (e) {
     delete keysDown[e.keyCode]; //Remove key from array
+}, false);
+
+
+// HANDLE TOUCH EVENTS
+
+// Get the position of a touch relative to the canvas
+function getTouchPos(canvasDom, touchEvent) {
+    var rect = canvasDom.getBoundingClientRect();
+    return {
+      x: touchEvent.touches[0].clientX - rect.left,
+      y: touchEvent.touches[0].clientY - rect.top
+    };
+  }
+
+canvas.addEventListener("touchstart", function (e) {
+    mousePos = getTouchPos(canvas, e);
+    if (mousePos['x'] < x0) {
+        keysDown[left_keyid] = true; //Add key to array (emulates a keyboard keypress)
+    }
+    else {
+        keysDown[right_keyid] = true; //Add key to array (emulates a keyboard keypress)
+    }
+
+}, false);
+
+canvas.addEventListener("touchend", function (e) {
+    if (mousePos['x'] < x0) {
+        delete keysDown[left_keyid]; //Remove key from array (emulates a keyboard key release)
+    }
+    else {
+        delete keysDown[right_keyid]; //Remove key from array (emulates a keyboard key release)
+    }
 }, false);
 
 // HANDLE AUDIO
@@ -150,7 +188,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     w=0; //Reset angular velocity to zero
     
     //KEYBOARD CONTROL (Tidy up, shift condition once that adds a scalar to left and right)
-    if (37 in keysDown) { // Left down
+    if (left_keyid in keysDown) { // Left down
         if (16 in keysDown) { //Shift down
             this.angle+=scale*0.04*Math.PI; //Add double angle
             w=2; //Set double w
@@ -161,7 +199,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
         }
     }
     
-    if (39 in keysDown) { // Right down
+    if (right_keyid in keysDown) { // Right down
         if (16 in keysDown) { //Shift down
             this.angle-=scale*0.04*Math.PI; //Add double angle
             w=-2; //Set double w
@@ -267,8 +305,6 @@ Ball.prototype.move = function () {
             gameover = 1; //Flag gameover
         }
     }
-    
-
 };
 
 //FRAME RATE
@@ -304,19 +340,54 @@ function loop(now) {
     scale=fpscale*(1+0.15*(level-1));
 }
 
-function clear() { //CLEAR CANVAS ON EVERY FRAME
+//CLEAR CANVAS ON EVERY FRAME
+function clear() { 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
+
+//STARTS GAME
+function startgame(ball, batton) {
+    ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
+    gamestart = 1; //Set game as started
+    gameover = 0; //Clear gameover flag
+    sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+    
+}
+
+//START GAME TIMER
+function timer(delay, ball, batton) {
+    timervalue = delay;
+    sound_hit.play() //Play collision SFX
+
+    var startTimer = setInterval(function(){
+        timervalue--;
+        if(timervalue <= 0) { //If at zero
+            console.log("DONE")
+            timerstarted = 0; //Stop timer
+            startgame(ball, batton)
+            console.log("CLEAR")
+            clearInterval(startTimer);
+        }
+        else { //If not zero
+            console.log(timervalue)
+            sound_hit.play() //Play collision SFX
+        }
+    },1000);
+}
+
+var timerstarted = 0; //Has countdown started
+var timervalue = 0; //Countdown value
 
 function update(ball, batton) { 
 
     if (gamestart!=1) { //If game hasn't started
-        if (13 in keysDown) { // If enter is in keysDown
-            hits = 0; //Reset score
-            ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
-            gamestart = 1; //Set game as started
-            gameover = 0; //Clear gameover flag
-            sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+        if (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown) { // If any key is pressed
+            if (timerstarted!=1){ // If timer hasn't already started
+                console.log("STARTING TIMER")
+                timerstarted = 1; //Flag timer as started
+                hits = 0; //Reset score
+                timer(3, ball, batton) //Start timer
+            }
         }
     }
     
@@ -353,14 +424,22 @@ function draw(ball, batton) { //DRAW FRAME
 
     //Title
     if (gamestart!=1) { //If game hasn't started
-        ctx.font = "normal 22px Verdana";
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign="center"; 
-        ctx.fillText("PRESS ENTER", x0, y0+60);
+        if (timerstarted!=1) { //If countdown hasn't started
+            ctx.font = "normal 22px Verdana";
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign="center"; 
+            ctx.fillText("PRESS ENTER", x0, y0+60);
+        }
+        else {
+            ctx.font = "normal 52px Verdana";
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign="center"; 
+            ctx.fillText(timervalue, x0, y0-80);
+        }
     }
 
     //Gameover screen
-    if (gameover!=0) {
+    if (gameover!=0 && timerstarted!=1) {
         ring_colour = '#FF0000';
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.fillText("SCORE: " + hits, x0, y0-50);
