@@ -316,6 +316,7 @@ function update(ball, batton) {
             ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
             gamestart = 1; //Set game as started
             gameover = 0; //Clear gameover flag
+            sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
         }
     }
     
