@@ -1,15 +1,18 @@
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
 
-canvas.width = 800;
-canvas.height = 600;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+smaller_dim = Math.min(canvas.width, canvas.height)
 
 var scale = 1;  //Animation scalar
 
+var R = smaller_dim /2.4;  //Circle Radius
+
 var x0 = 0.5*canvas.width;  //Centre x
 var y0 = 0.5*canvas.height;  //Centre y
-var R = 250;  //Circle Radius
-var s = 0.2*Math.PI;  //Batton size
+var s = 0.2*Math.PI;  //Batton angular size
 var w = 0;  //Initial angular frequency of batton
 
 var gamestart = 0; //Game active
