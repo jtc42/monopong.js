@@ -4,25 +4,18 @@ var ctx = canvas.getContext('2d');
 canvas.width = 800;
 canvas.height = 600;
 
-var scale=1; //Animation scalar
+var scale = 1;  //Animation scalar
 
-var x0= 0.5*canvas.width; //Centre x
-var y0= 0.5*canvas.height; //Centre y
-var R= 250; //Circle Radius
-var s=0.2*Math.PI; //Batton size
-var w=0; //Initial angular frequency of batton
+var x0 = 0.5*canvas.width;  //Centre x
+var y0 = 0.5*canvas.height;  //Centre y
+var R = 250;  //Circle Radius
+var s = 0.2*Math.PI;  //Batton size
+var w = 0;  //Initial angular frequency of batton
 
-var ballstart = new Vector(x0,y0); //Start point of ball
-var ballv = new Vector(0.0,-6); //Initial velocity of ball
-
-var bangle=0; //Arcsine of Sine of batton angle (Keeps +ve and -ve in check)
-
-var gamestart=0; //Game active
-var hits=0; //Hit count
-var level=0; //NOT CURRENTLY USED, WILL MEAN 10 HITS
-var topscore=0; //High score
-
-
+var gamestart = 0; //Game active
+var hits = 0; //Hit count
+var level = 0; //Iterates every 10 hits
+var topscore = 0; //High score
 
 // Handle keyboard controls
 var keysDown = {}; //Array of keys down
@@ -48,8 +41,8 @@ function fourth(x) { //Fourth a value, requires cube
     return x*cube(x);
 }
 
-function GetMod(x) { //Get Modulus
-    a=square(x); //Square input
+function absolute(x) { //Get Modulus
+    a = square(x); //Square input
     return Math.sqrt(a); //Root square
 }
 
@@ -102,7 +95,7 @@ function GetVectorv(r,t) { //Combine Getvx and Getvy
 
 //Position to polar
 Vector.prototype.getRadius = function () { //Add as function of particular vector property eg something.vector.getRadius
-    return Math.sqrt((this.x-x0) * (this.x-x0) + (this.y-y0) * (this.y-y0)); //Get modulus accounting for relative to centre of circle
+    return Math.sqrt((this.x-x0) * (this.x-x0) + (this.y-y0) * (this.y-y0)); //Get absolute accounting for relative to centre of circle
 };
 
 Vector.prototype.getAngle = function () { //Add as function of particular vector property eg something.vector.getAngle
@@ -112,7 +105,7 @@ Vector.prototype.getAngle = function () { //Add as function of particular vector
 
 //Velocity to polar
 Vector.prototype.getMagnitude = function () { //Add as function of particular vector property eg something.vector.getMagnitude
-    return Math.sqrt((this.x) * (this.x) + (this.y) * (this.y)); //Get modulus not accounting for relative to centre of circle
+    return Math.sqrt((this.x) * (this.x) + (this.y) * (this.y)); //Get absolute not accounting for relative to centre of circle
 };
 
 Vector.prototype.getAnglev = function () { //Add as function of particular vector property eg something.vector.getAnglev
@@ -124,9 +117,10 @@ Vector.prototype.getAnglev = function () { //Add as function of particular vecto
 //BATTON
 //Define batton as an object, reading radius and angle
 function Batton(r, t) { 
-    this.position= new Vector(Getx(r,t), Gety(r,t)); //Calculate position from radius and angle
-    this.radius=r; //Add radius as a function of a batton object
-    this.angle=t; //Add angle as a function of a batton object
+    this.position = new Vector(Getx(r,t), Gety(r,t)); //Calculate position from radius and angle
+    this.radius = r; //Add radius as a function of a batton object
+    this.angle = t; //Add angle as a function of a batton object
+    this.b_angle = 0;
 }
 
 //Batton Move
@@ -134,7 +128,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     
     w=0; //Reset angular velocity to zero
     
-    //KEYBOARD CONTROL (Tidy up, shift coniditon once that adds a scalar to left and right)
+    //KEYBOARD CONTROL (Tidy up, shift condition once that adds a scalar to left and right)
     if (37 in keysDown) { // Left down
         if (16 in keysDown) { //Shift down
             this.angle+=scale*0.04*Math.PI; //Add double angle
@@ -170,14 +164,14 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     //GET BATTON VECTOR
     this.position=GetVector(this.radius, this.angle); //Get batton position from radius and angle
     
-    bangle= Math.asin(Math.sin(this.angle)); //Set bangle to arcsin of sin of angle (Keeps +ve and -ve in check)
+    this.b_angle= Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check)
     
 };
 
 
 //BALL
 //Define ball as an object, reading position and velocity vectors
-function Ball(position,velocity) {
+function Ball(position, velocity, batton) {
     this.position = position || new Vector(x0,y0); //Set ball.position to given vector, or default to centre
     this.velocity = velocity || new Vector(0,0); //Set ball.velocity to given vector, or default to zero
     
@@ -186,6 +180,8 @@ function Ball(position,velocity) {
     
     this.vmag = 0; //Initial velocity magnitude
     this.vangle = 0; //Initial velocity angle
+
+    this.batton = batton; //Attached batton object
 }
 
 
@@ -200,21 +196,21 @@ Ball.prototype.move = function () {
     
     
     if (this.radius<R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + maximum extra due to one frames worth of velocity)
-        if (Math.asin(Math.sin(this.pangle)) > bangle-0.5*s && Math.asin(Math.sin(this.pangle)) < bangle+0.5*s && this.radius >=R) { //If within batton angle AND on our outside inner boundary (collision)
+        if (Math.asin(Math.sin(this.pangle)) > this.batton.b_angle-0.5*s && Math.asin(Math.sin(this.pangle)) < this.batton.b_angle+0.5*s && this.radius >=R) { //If within batton angle AND on our outside inner boundary (collision)
             
-            if ((GetMod(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
+            if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
                 //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-                this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(GetMod(Math.cos(ball_main.vangle+ball_main.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
+                this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(absolute(Math.cos(ball_main.vangle+ball_main.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
             } 
                             
             else { //For shallow angles
-                if (GetMod(this.pangle) > 0.6*Math.PI){ //For left half
+                if (absolute(this.pangle) > 0.6*Math.PI){ //For left half
                     //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
-                    this.vangle = Math.PI - this.vangle - 2*this.pangle -(this.vangle/GetMod(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
+                    this.vangle = Math.PI - this.vangle - 2*this.pangle -(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
                 } 
                 else { //For right half
                     //Calculate new physical velocity angle, plus small random component opposing natural velocity (deflect away from edge)
-                    this.vangle = Math.PI - this.vangle - 2*this.pangle +(this.vangle/GetMod(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
+                    this.vangle = Math.PI - this.vangle - 2*this.pangle +(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
                 } 
                                 
             }//For shallow angles
@@ -278,7 +274,7 @@ function calculateFps(now) {
 
 // Create objects
 var batton_main = new Batton(R, 0.5*Math.PI); //Make a new batton at top of circle
-var ball_main = new Ball(ballstart,0); //New ball at ballstart position (variables at top) and zero velocit
+var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) //New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
@@ -304,8 +300,8 @@ function update(ball, batton) { //UPDATE OBJECT DATA
     //New game condition
     if (gamestart!=1) { //If game hasn't started
         if (13 in keysDown) { // If space is in keysDown
-            ball.velocity=ballv; //Give ball an initial velocity
-            gamestart=1; //Set game as started
+            ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
+            gamestart = 1; //Set game as started
         }
     }
     
@@ -329,14 +325,14 @@ function draw(ball, batton) { //DRAW FRAME
     
     //Batton decoration
     ctx.beginPath();
-    ctx.arc(x0,y0,R+2,batton.angle -s,batton.angle +s);
+    ctx.arc(x0, y0, R+2, batton.angle-s, batton.angle+s);
     ctx.lineWidth = 6;
     ctx.strokeStyle = '#FFA500';
     ctx.stroke();
 
     //Batton
     ctx.beginPath();
-    ctx.arc(x0,y0,R+4,-batton.angle -0.5*s,-batton.angle +0.5*s);
+    ctx.arc(x0, y0, R+4, -batton.angle-0.5*s, -batton.angle+0.5*s);
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
@@ -344,17 +340,17 @@ function draw(ball, batton) { //DRAW FRAME
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
-    ctx.arc(ball.position.x, ball.position.y, 8, 0, 2 * Math.PI, false);
+    ctx.arc(ball.position.x, ball.position.y, 8, 0, 2*Math.PI, false);
     ctx.fillRect(Math.round(ball.position.x), Math.round(ball.position.y), 2, 2);
     ctx.fill();
     
     //Score
-    ctx.font      = "normal 18px Verdana";
+    ctx.font = "normal 18px Verdana";
     ctx.fillStyle = "#ffffff";
     ctx.fillText("Hits: "+ hits, 50, 50);
     ctx.fillText("Highscore: " +topscore, 50, 100);
     
-    ctx.font      = "normal 18px Verdana";
+    ctx.font = "normal 18px Verdana";
     ctx.fillStyle = "#ffffff";
     ctx.fillText("Level: " +level, 50, 150);
     
