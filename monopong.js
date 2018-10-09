@@ -1,3 +1,7 @@
+//TODO: Improve collision detection, because it is quite bad
+//TODO: Add savedata system/leaderboard
+//TODO: Shiny up
+
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
 
@@ -20,6 +24,24 @@ var gameover = 0; //Has gameover occured
 var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
+
+
+//HANDLE CONTEXT MENU OVERRIDE
+if (document.addEventListener) {
+    document.addEventListener('contextmenu', function(e) {
+        console.log("You've tried to open context menu"); //here you draw your own menu
+        e.preventDefault();
+        e.preventDefault && e.preventDefault();
+        e.stopPropagation && e.stopPropagation();
+        e.cancelBubble = true;
+        e.returnValue = false;
+    }, false);
+} else {
+    document.attachEvent('oncontextmenu', function() {
+        console.log("You've tried to open context menu the other way");
+        window.event.returnValue = false;
+    });
+}
 
 // HANDLE CONTROLS
 
