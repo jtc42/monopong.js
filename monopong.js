@@ -13,6 +13,7 @@ var s = 0.2*Math.PI;  //Batton size
 var w = 0;  //Initial angular frequency of batton
 
 var gamestart = 0; //Game active
+var gameover = 0; //Has gameover occured
 var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
@@ -234,24 +235,8 @@ Ball.prototype.move = function () {
             
     } 
     else { //If outside outer circle boundary
-        console.log("Out of bounds");
         if (gamestart=1) {
-        //RESET GAME
-            this.position.x=x0; //Reset x
-            this.position.y=y0; //Reset y
-            
-            this.velocity.x=0; //Reset vx
-            this.velocity.y=0; //Reset vy
-            
-            batton_main.angle=0.5*Math.PI; //Reset Batton
-
-            alert("You lose! Press Enter to restart."); //Lose alert
-            keysDown=[]; //Clear keys down
-            gamestart=0; //Stop game
-            if (hits>topscore){ //If score beats current best
-                topscore=hits; //Update topscore
-            }
-            hits=0; //Reset hit count
+            gameover = 1; //Flag gameover
         }
     }
     
@@ -295,39 +280,78 @@ function clear() { //CLEAR CANVAS ON EVERY FRAME
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function update(ball, batton) { //UPDATE OBJECT DATA
+function update(ball, batton) { 
 
-    //New game condition
     if (gamestart!=1) { //If game hasn't started
-        if (13 in keysDown) { // If space is in keysDown
+        if (13 in keysDown) { // If enter is in keysDown
+            hits = 0; //Reset score
             ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
             gamestart = 1; //Set game as started
+            gameover = 0; //Clear gameover flag
         }
     }
     
     else {  // If game has started
-        //BATTON MOTION
-        batton.move(); //Move batton
-        
-        //BALL MOTION
-        ball.move(); //Move ball
+        if (gameover!=0) { //If game has started AND gameover
+            ball.position.x=x0; //Reset x
+            ball.position.y=y0; //Reset y
+            
+            ball.velocity.x=0; //Reset vx
+            ball.velocity.y=0; //Reset vy
+            
+            batton_main.angle=0.5*Math.PI; //Reset Batton
+
+            keysDown=[]; //Clear keys down
+
+            gamestart = 0; //Stop game
+
+            if (hits>topscore){ //If score beats current best
+                topscore=hits; //Update topscore
+            }
+            
+        }
+        else {  //If game has started AND NOT gameover
+            //BATTON MOTION
+            batton.move(); //Move batton
+            
+            //BALL MOTION
+            ball.move(); //Move ball
+        }
     }
 }
 
 function draw(ball, batton) { //DRAW FRAME
+
+    //Title
+    if (gamestart!=1) { //If game hasn't started
+        ctx.font = "normal 22px Verdana";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign="center"; 
+        ctx.fillText("PRESS ENTER", x0, y0+60);
+    }
+
+    //Gameover screen
+    if (gameover!=0) {
+        ring_colour = '#FF0000';
+        ctx.fillText("GAME OVER", x0, y0-80);
+        ctx.fillText("SCORE: " + hits, x0, y0-50);
+    }
+    else {
+        ring_colour = '#bc7a00';
+    }
                     
     //Ring
     ctx.beginPath();
     ctx.arc(x0,y0,R,0,2*Math.PI);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = '#FFA500';
+    ctx.strokeStyle = ring_colour;
     ctx.stroke();
     
     //Batton decoration
     ctx.beginPath();
     ctx.arc(x0, y0, R+2, batton.angle-s, batton.angle+s);
     ctx.lineWidth = 6;
-    ctx.strokeStyle = '#FFA500';
+    ctx.strokeStyle = ring_colour;
     ctx.stroke();
 
     //Batton
@@ -347,12 +371,10 @@ function draw(ball, batton) { //DRAW FRAME
     //Score
     ctx.font = "normal 18px Verdana";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText("Hits: "+ hits, 50, 50);
-    ctx.fillText("Highscore: " +topscore, 50, 100);
-    
-    ctx.font = "normal 18px Verdana";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText("Level: " +level, 50, 150);
+    ctx.textAlign="left"; 
+    ctx.fillText("Hits: " + hits, 50, 50);
+    ctx.fillText("Highscore: " + topscore, 50, 100);
+    ctx.fillText("Level: " + level, 50, 150);
     
 }
 
