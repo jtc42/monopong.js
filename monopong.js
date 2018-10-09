@@ -18,7 +18,7 @@ var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
 
-// Handle keyboard controls
+// HANDLE KEYBOARD 
 var keysDown = {}; //Array of keys down
 
 addEventListener("keydown", function (e) {
@@ -29,7 +29,27 @@ addEventListener("keyup", function (e) {
     delete keysDown[e.keyCode]; //Remove key from array
 }, false);
 
-            
+// HANDLE AUDIO
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+        this.sound.play();
+    }
+    this.stop = function(){
+        this.sound.pause();
+    }
+}
+
+sound_hit = new sound("./ping_pong_8bit_plop.wav");
+sound_shallow = new sound("./ping_pong_8bit_beeep.wav");
+sound_miss = new sound("./ping_pong_8bit_peeeeeep.wav");
+
+// BASIC FUNCTIONS
 function square(x) { //Square a value
     return x*x;
 }
@@ -163,9 +183,8 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     
     
     //GET BATTON VECTOR
-    this.position=GetVector(this.radius, this.angle); //Get batton position from radius and angle
-    
-    this.b_angle= Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check)
+    this.position = GetVector(this.radius, this.angle); //Get batton position from radius and angle
+    this.b_angle = Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check)
     
 };
 
@@ -198,13 +217,21 @@ Ball.prototype.move = function () {
     
     if (this.radius<R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + maximum extra due to one frames worth of velocity)
         if (Math.asin(Math.sin(this.pangle)) > this.batton.b_angle-0.5*s && Math.asin(Math.sin(this.pangle)) < this.batton.b_angle+0.5*s && this.radius >=R) { //If within batton angle AND on our outside inner boundary (collision)
-            
+
             if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
+
+                console.log("STEEP")
+                sound_hit.play() //Play collision SFX
+
                 //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
                 this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(absolute(Math.cos(ball_main.vangle+ball_main.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
             } 
                             
             else { //For shallow angles
+
+                console.log("SHALLOW")
+                sound_shallow.play() //Play shallow collision SFX
+
                 if (absolute(this.pangle) > 0.6*Math.PI){ //For left half
                     //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
                     this.vangle = Math.PI - this.vangle - 2*this.pangle -(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
@@ -235,6 +262,7 @@ Ball.prototype.move = function () {
             
     } 
     else { //If outside outer circle boundary
+        sound_miss.play() //Play collision SFX
         if (gamestart=1) {
             gameover = 1; //Flag gameover
         }
@@ -257,9 +285,9 @@ function calculateFps(now) {
     return Math.round(fps); 
 }
 
-// Create objects
-var batton_main = new Batton(R, 0.5*Math.PI); //Make a new batton at top of circle
-var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) //New ball
+// Create objects for game
+var batton_main = new Batton(R, 0.5*Math.PI); // Make a new batton at top of circle
+var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) // New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
