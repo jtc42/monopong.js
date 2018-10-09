@@ -428,7 +428,7 @@ function draw(ball, batton) { //DRAW FRAME
             ctx.font = "normal 22px Verdana";
             ctx.fillStyle = "#ffffff";
             ctx.textAlign="center"; 
-            ctx.fillText("PRESS ENTER", x0, y0+60);
+            ctx.fillText("TOUCH/KEY TO START", x0, y0+60);
         }
         else {
             ctx.font = "normal 52px Verdana";
