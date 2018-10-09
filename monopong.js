@@ -202,9 +202,9 @@ Ball.prototype.move = function () {
     if (this.radius<R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + maximum extra due to one frames worth of velocity)
         if (Math.asin(Math.sin(this.pangle)) > bangle-0.5*s && Math.asin(Math.sin(this.pangle)) < bangle+0.5*s && this.radius >=R) { //If within batton angle AND on our outside inner boundary (collision)
             
-            if ((GetMod(Math.cos(Ball1.vangle+Ball1.pangle))) > 0.5){ //For steep angles
+            if ((GetMod(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
                 //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-                this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(GetMod(Math.cos(Ball1.vangle+Ball1.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
+                this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(GetMod(Math.cos(ball_main.vangle+ball_main.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
             } 
                             
             else { //For shallow angles
@@ -247,7 +247,7 @@ Ball.prototype.move = function () {
             this.velocity.x=0; //Reset vx
             this.velocity.y=0; //Reset vy
             
-            Batton1.angle=0.5*Math.PI; //Reset Batton
+            batton_main.angle=0.5*Math.PI; //Reset Batton
 
             alert("You lose! Press Enter to restart."); //Lose alert
             keysDown=[]; //Clear keys down
@@ -262,15 +262,8 @@ Ball.prototype.move = function () {
 
 };
 
-// Create objects
-var Batton1 = new Batton(R, 0.5*Math.PI); //Make a new batton at top of circle
-var Ball1 = new Ball(ballstart,0); //New ball at ballstart position (variables at top) and zero velocity
-
-
-
 //FRAME RATE
-var lastAnimationFrameTime = 0,
-    lastFpsUpdateTime = 0;
+var lastAnimationFrameTime = 0, lastFpsUpdateTime = 0;
 
 function calculateFps(now) {
     var fps = 1000 / (now - lastAnimationFrameTime);
@@ -283,16 +276,18 @@ function calculateFps(now) {
     return Math.round(fps); 
 }
 
-
+// Create objects
+var batton_main = new Batton(R, 0.5*Math.PI); //Make a new batton at top of circle
+var ball_main = new Ball(ballstart,0); //New ball at ballstart position (variables at top) and zero velocit
 
 //ANIMATION SEQUENCE
 function loop(now) {
-
     //Run main loop
     clear();
-    update();
-    draw();
+    update(ball_main, batton_main);
+    draw(ball_main, batton_main);
     queue();
+
     //Get FPS and scale
     fps = calculateFps(now);
     fpscale=60/fps;
@@ -304,25 +299,26 @@ function clear() { //CLEAR CANVAS ON EVERY FRAME
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function update() { //UPDATE OBJECT DATA
+function update(ball, batton) { //UPDATE OBJECT DATA
 
     //New game condition
     if (gamestart!=1) { //If game hasn't started
         if (13 in keysDown) { // If space is in keysDown
-            Ball1.velocity=ballv; //Give ball velocity
+            ball.velocity=ballv; //Give ball an initial velocity
             gamestart=1; //Set game as started
         }
     }
     
-    //BATTON MOTION
-    Batton1.move(); //Move batton
-    
-    //BALL MOTION
-    Ball1.move(); //Move ball
-    
+    else {  // If game has started
+        //BATTON MOTION
+        batton.move(); //Move batton
+        
+        //BALL MOTION
+        ball.move(); //Move ball
+    }
 }
 
-function draw() { //DRAW FRAME
+function draw(ball, batton) { //DRAW FRAME
                     
     //Ring
     ctx.beginPath();
@@ -331,20 +327,16 @@ function draw() { //DRAW FRAME
     ctx.strokeStyle = '#FFA500';
     ctx.stroke();
     
-    //Batton
-    //ctx.beginPath();
-    //ctx.arc(Batton1.position.x, Batton1.position.y, 5, 0, 2 * Math.PI, false);
-    //ctx.fillStyle = 'blue';
-    //ctx.fill();
-    
+    //Batton decoration
     ctx.beginPath();
-    ctx.arc(x0,y0,R+2,Batton1.angle -s,Batton1.angle +s);
+    ctx.arc(x0,y0,R+2,batton.angle -s,batton.angle +s);
     ctx.lineWidth = 6;
     ctx.strokeStyle = '#FFA500';
     ctx.stroke();
-    
+
+    //Batton
     ctx.beginPath();
-    ctx.arc(x0,y0,R+4,-Batton1.angle -0.5*s,-Batton1.angle +0.5*s);
+    ctx.arc(x0,y0,R+4,-batton.angle -0.5*s,-batton.angle +0.5*s);
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
@@ -352,8 +344,8 @@ function draw() { //DRAW FRAME
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
-    ctx.arc(Ball1.position.x, Ball1.position.y, 8, 0, 2 * Math.PI, false);
-    ctx.fillRect(Math.round(Ball1.position.x), Math.round(Ball1.position.y), 2, 2);
+    ctx.arc(ball.position.x, ball.position.y, 8, 0, 2 * Math.PI, false);
+    ctx.fillRect(Math.round(ball.position.x), Math.round(ball.position.y), 2, 2);
     ctx.fill();
     
     //Score
@@ -362,41 +354,9 @@ function draw() { //DRAW FRAME
     ctx.fillText("Hits: "+ hits, 50, 50);
     ctx.fillText("Highscore: " +topscore, 50, 100);
     
-    
     ctx.font      = "normal 18px Verdana";
     ctx.fillStyle = "#ffffff";
-    //ctx.fillText(gamestart, 200, 50);
-    //ctx.fillText(Math.round(fps,), 250, 50);
     ctx.fillText("Level: " +level, 50, 150);
-    
-    /*
-    Debug
-    ctx.font      = "normal 18px Verdana";
-    ctx.fillStyle = "#000000";
-    ctx.fillText(Math.round(Ball1.position.x), 50, 50);
-    ctx.fillText(Math.round(Ball1.position.y), 50, 100);
-    ctx.fillText(Math.round(Ball1.radius), 50, 200);
-    ctx.fillText(Math.asin(Math.sin(Ball1.pangle)), 50, 250);
-    ctx.fillText(Ball1.vangle, 50, 300);
-    ctx.fillText(Math.round(Ball1.vmag), 50, 350);
-    ctx.fillText(GetMod(Math.cos(Ball1.vangle+Ball1.pangle)), 50, 400);
-    ctx.fillText(bangle, 50, 500);
-    ctx.fillText(w, 50, 450);
-    
-    Dev Line
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(Batton1.position.x, Batton1.position.y);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#cccccc';
-    ctx.stroke();
-        
-    Centre dot
-    ctx.beginPath();
-    ctx.arc(x0, y0, 5, 0, 2 * Math.PI, false);
-    ctx.fillStyle = 'gray';
-    ctx.fill();
-    */
     
 }
 
@@ -404,5 +364,5 @@ function queue() { //GET NEW FRAME
     window.requestAnimationFrame(loop);
 }
 
-console.log("Entering game")
+// Start the game
 loop(); //Run animation loop
