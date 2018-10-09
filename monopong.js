@@ -440,15 +440,22 @@ function draw(ball, batton) { //DRAW FRAME
 
     //Gameover screen
     if (gameover!=0 && timerstarted!=1) {
-        ring_colour = '#FF0000';
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.fillText("SCORE: " + hits, x0, y0-50);
     }
-    else {
+
+    
+    //Ring
+    if (gameover!=0 && timerstarted!=1) { //If gameover and timer now started
+        ring_colour = '#FF0000';
+    }
+    else if (timerstarted!=0 || (gameover!=1 && gamestart!=1)) { //If timer started, or not gameover but game not started (ie first run)
         ring_colour = '#bc7a00';
     }
-                    
-    //Ring
+    else { //If game is running
+        ring_colour = '#00bca6';
+    }
+
     ctx.beginPath();
     ctx.arc(x0,y0,R,0,2*Math.PI);
     ctx.lineWidth = 2;
