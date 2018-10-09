@@ -1,3 +1,4 @@
+//TODO: Try and override long press vibration on mobile
 //TODO: Improve collision detection, because it is quite bad
 //TODO: Add savedata system/leaderboard
 //TODO: Shiny up
