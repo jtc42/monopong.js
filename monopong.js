@@ -1,4 +1,5 @@
 //TODO: Try and override long press vibration on mobile
+//TODO: Scale text, batton, and ring line to ring radius
 //TODO: Improve collision detection, because it is quite bad
 //TODO: Add savedata system/leaderboard
 //TODO: Shiny up
@@ -373,7 +374,7 @@ function clear() {
 
 //STARTS GAME
 function startgame(ball, batton) {
-    ball.velocity = new Vector(0.0,-6); //Give ball an initial velocity
+    ball.velocity = new Vector(0.0, -0.024*R); //Give ball an initial velocity
     gamestart = 1; //Set game as started
     gameover = 0; //Clear gameover flag
     sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
@@ -505,8 +506,7 @@ function draw(ball, batton) { //DRAW FRAME
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
-    ctx.arc(ball.position.x, ball.position.y, 8, 0, 2*Math.PI, false);
-    ctx.fillRect(Math.round(ball.position.x), Math.round(ball.position.y), 2, 2);
+    ctx.arc(ball.position.x, ball.position.y, 0.032*R, 0, 2*Math.PI, false);
     ctx.fill();
     
     //Score
