@@ -7,8 +7,8 @@
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
 
 var smaller_dim = Math.min(canvas.width, canvas.height);
 
@@ -33,8 +33,8 @@ var godmode = false; //Never lose god mode
 
 //Function to recalculate all dimensions
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
 
     smaller_dim = Math.min(canvas.width, canvas.height)
     R = smaller_dim /2.4;
