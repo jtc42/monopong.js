@@ -271,6 +271,7 @@ function Ball(position, velocity, batton) {
 
 //Generic function to test for collision between a ball and a batton
 function testCollision(ball, batton) {
+    //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
     return (Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s && ball.radius >=R);
 }
@@ -286,7 +287,7 @@ Ball.prototype.move = function () {
     
     
     if (this.radius < R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + extra due to one frames worth of velocity), run collision testing
-        
+
         if (testCollision(this, this.batton)) { //If ball has colided with batton
 
             if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
