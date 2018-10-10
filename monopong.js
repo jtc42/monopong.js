@@ -16,21 +16,62 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-//DEFINITIONS
+//SET UP CANVAS
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
 
-canvas.width = document.body.clientWidth;
-canvas.height = document.body.clientHeight;
+//Store view sizes
+var viewWidth = document.body.clientWidth;
+var viewHeight = document.body.clientHeight;
 
-var smaller_dim = Math.min(canvas.width, canvas.height);
+// Set display size (css pixels).
+canvas.style.width = viewWidth + "px";
+canvas.style.height = viewHeight + "px";
 
-var scale = 1;  //Animation scalar
+// Set actual size in memory (scaled to account for extra pixel density).
+var scale = window.devicePixelRatio;
+canvas.width = viewWidth * scale;
+canvas.height = viewHeight * scale;
 
+// Normalize coordinate system to use css pixels.
+ctx.scale(scale, scale);
+
+// Canvas-scaled dimensions
+var smaller_dim = Math.min(viewWidth, viewHeight);
 var R = smaller_dim /2.4;  //Circle Radius
 
-var x0 = 0.5*canvas.width;  //Centre x
-var y0 = 0.5*canvas.height;  //Centre y
+var x0 = 0.5*viewWidth;  //Centre x
+var y0 = 0.5*viewHeight;  //Centre y
+
+//Function to recalculate all dimensions
+function resizeCanvas() {
+    //Update view sizes
+    viewWidth = document.body.clientWidth;
+    viewHeight = document.body.clientHeight;
+
+    // Update display size (css pixels).
+    canvas.style.width = viewWidth + "px";
+    canvas.style.height = viewHeight + "px";
+
+    // Set actual size in memory (scaled to account for extra pixel density).
+    scale = window.devicePixelRatio;
+    canvas.width = viewWidth * scale;
+    canvas.height = viewHeight * scale;
+
+    // Normalize coordinate system to use css pixels.
+    ctx.scale(scale, scale);   
+
+    // Canvas-scaled dimensions
+    smaller_dim = Math.min(viewWidth, viewHeight);
+    R = smaller_dim /2.4;  //Circle Radius
+
+    x0 = 0.5*viewWidth;  //Centre x
+    y0 = 0.5*viewHeight;  //Centre y
+}
+
+//DEFINITIONS
+var scale = 1;  //Animation scalar
+
 var s = 0.2*Math.PI;  //Batton angular size
 var w = 0;  //Initial angular frequency of batton
 
@@ -44,17 +85,7 @@ var topscore = 0; //High score
 var godmode = false; //Never lose god mode
 
 
-//Function to recalculate all dimensions
-function resizeCanvas() {
-    canvas.width = document.body.clientWidth;
-    canvas.height = document.body.clientHeight;
 
-    smaller_dim = Math.min(canvas.width, canvas.height)
-    R = smaller_dim /2.4;
-
-    x0 = 0.5*canvas.width;
-    y0 = 0.5*canvas.height;
-}
 
 // Handle resize events
 window.addEventListener('resize', resizeCanvas, false);
