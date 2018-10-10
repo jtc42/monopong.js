@@ -269,6 +269,10 @@ function Ball(position, velocity, batton) {
     this.batton = batton; //Attached batton object
 }
 
+function testCollision(ball, batton) {
+    //If within batton angle AND on our outside inner boundary (collision)
+    return (Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s && ball.radius >=R);
+}
 
 //Ball Move
 Ball.prototype.move = function () {
@@ -281,7 +285,7 @@ Ball.prototype.move = function () {
     
     
     if (this.radius<R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + maximum extra due to one frames worth of velocity)
-        if (Math.asin(Math.sin(this.pangle)) > this.batton.b_angle-0.5*s && Math.asin(Math.sin(this.pangle)) < this.batton.b_angle+0.5*s && this.radius >=R) { //If within batton angle AND on our outside inner boundary (collision)
+        if (testCollision(this, this.batton)) { //If ball has colided with batton
 
             if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
 
@@ -306,7 +310,7 @@ Ball.prototype.move = function () {
                     this.vangle = Math.PI - this.vangle - 2*this.pangle +(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
                 } 
                                 
-            }//For shallow angles
+            } //For shallow angles
             
             this.velocity= GetVectorv(this.vmag,this.vangle); //Update velocity vector after collision, from magnitude and angle
             
