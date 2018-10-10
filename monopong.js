@@ -115,6 +115,10 @@ sound_shallow = new sound("./ping_pong_8bit_beeep.wav");
 sound_miss = new sound("./ping_pong_8bit_peeeeeep.wav");
 
 // BASIC FUNCTIONS
+function isEmpty(obj) { //Test for empty arrays
+    return Object.keys(obj).length === 0;
+}
+
 function square(x) { //Square a value
     return x*x;
 }
@@ -412,10 +416,18 @@ function timer(delay, ball, batton) {
 var timerstarted = 0; //Has countdown started
 var timervalue = 0; //Countdown value
 
+var game_startable = 1; //Can the game be started? (After gameover, all keys must be released for this to be 1)
+
 function update(ball, batton) { 
 
     if (gamestart!=1) { //If game hasn't started
-        if (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown) { // If any key is pressed
+
+        if (game_startable !=1 && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
+            console.log("Making game startable")
+            game_startable = 1; //Make game startable once all keys have been let go of
+        }
+
+        if (game_startable==1 && (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown)) { // If game is startable AND any key is pressed
             if (timerstarted!=1){ // If timer hasn't already started
                 console.log("STARTING TIMER")
                 timerstarted = 1; //Flag timer as started
@@ -435,9 +447,10 @@ function update(ball, batton) {
             
             batton_main.angle=0.5*Math.PI; //Reset Batton
 
-            keysDown=[]; //Clear keys down
+            keysDown = {}; //Clear keys down
 
             gamestart = 0; //Stop game
+            game_startable = 0; //Lock game out of starting
 
             if (hits>topscore){ //If score beats current best
                 topscore=hits; //Update topscore
