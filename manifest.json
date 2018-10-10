@@ -2,9 +2,10 @@
     "name": "Monopong Alpha",
     "short_name": "Monopong Alpha",
     "lang": "en-GB",
-    "start_url": "/index.html",
+    "start_url": "/",
     "display": "fullscreen",
     "background_color": "#202020",
+    "theme_color": "#202020",
     "icons": [
         {
           "src": "/icon-192.png",
