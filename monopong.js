@@ -10,7 +10,7 @@ var ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-smaller_dim = Math.min(canvas.width, canvas.height)
+var smaller_dim = Math.min(canvas.width, canvas.height);
 
 var scale = 1;  //Animation scalar
 
@@ -29,6 +29,22 @@ var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
 
 var godmode = false; //Never lose god mode
+
+
+//Function to recalculate all dimensions
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    smaller_dim = Math.min(canvas.width, canvas.height)
+    R = smaller_dim /2.4;
+
+    x0 = 0.5*canvas.width;
+    y0 = 0.5*canvas.height;
+}
+
+// Handle resize events
+window.addEventListener('resize', resizeCanvas, false);
 
 
 //HANDLE CONTEXT MENU OVERRIDE
@@ -446,6 +462,10 @@ function update(ball, batton) {
 
     if (!gamestart) { //If game hasn't started
 
+        // Updated ball resting position (in case of canvas resize)
+        ball.position.x = x0; //Reset x
+        ball.position.y = y0; //Reset y
+
         if (!game_startable && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
             console.log("Making game startable")
             game_startable = true; //Make game startable once all keys have been let go of
@@ -463,11 +483,11 @@ function update(ball, batton) {
     
     else {  // If game has started
         if (gameover) { //If game has started AND gameover
-            ball.position.x=x0; //Reset x
-            ball.position.y=y0; //Reset y
+            ball.position.x = x0; //Reset x
+            ball.position.y = y0; //Reset y
             
-            ball.velocity.x=0; //Reset vx
-            ball.velocity.y=0; //Reset vy
+            ball.velocity.x = 0; //Reset vx
+            ball.velocity.y = 0; //Reset vy
             
             batton_main.angle=0.5*Math.PI; //Reset Batton
 
