@@ -16,14 +16,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-//Prompt to install
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    e.prompt();
-});
-
-
 //DEFINITIONS
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
