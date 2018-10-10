@@ -1,9 +1,22 @@
 //TODO: Try and override long press vibration on mobile
 //TODO: Scale text, batton, and ring line to ring radius
 //TODO: Improve collision detection, because it is quite bad
-//TODO: Add savedata system/leaderboard
+//TODO: Add savedata system
 //TODO: Shiny up
 
+//PWA STUFF
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+    .then(function(registration) {
+        console.log('Registration successful, scope is:', registration.scope);
+    })
+    .catch(function(error) {
+        console.log('Service worker registration failed, error:', error);
+    });
+}
+
+
+//DEFINITIONS
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
 
