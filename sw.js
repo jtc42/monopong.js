@@ -1,11 +1,11 @@
 var cacheName = 'MONOPONG-A0.1';
 var appShellFiles = [
-  './',
-  './index.html',
-  './monopong.js',
-  './ping_pong_8bit_beeep.wav',
-  './ping_pong_8bit_peeeeeep.wav',
-  './ping_pong_8bit_plop.wav'
+  '/',
+  '/index.html',
+  '/monopong.js',
+  '/ping_pong_8bit_beeep.wav',
+  '/ping_pong_8bit_peeeeeep.wav',
+  '/ping_pong_8bit_plop.wav'
 ];
 
 self.addEventListener('install', function(e) {
