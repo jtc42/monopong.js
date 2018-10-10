@@ -21,11 +21,14 @@ var y0 = 0.5*canvas.height;  //Centre y
 var s = 0.2*Math.PI;  //Batton angular size
 var w = 0;  //Initial angular frequency of batton
 
-var gamestart = 0; //Game active
-var gameover = 0; //Has gameover occured
+var gamestart = false; //Game active
+var gameover = false; //Has gameover occured
+
 var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
 var topscore = 0; //High score
+
+var godmode = false; //Never lose god mode
 
 
 //HANDLE CONTEXT MENU OVERRIDE
@@ -117,6 +120,18 @@ sound_miss = new sound("./ping_pong_8bit_peeeeeep.wav");
 // BASIC FUNCTIONS
 function isEmpty(obj) { //Test for empty arrays
     return Object.keys(obj).length === 0;
+}
+
+function sigmoid(t) { //Pure sigmoid
+    return 1/(1+Math.pow(Math.E, -t));
+}
+
+function difficulty(t, a, b) { //Sigmoidal difficulty curve
+    return a*(sigmoid(b*(t - 1)) - 0.5) + 1;
+}
+
+function deathpaddle(t, a, b) { //Value of s for linearly decreasing paddle size in death mode
+    return Math.PI*(-a*t + b);
 }
 
 function square(x) { //Square a value
@@ -277,7 +292,15 @@ function Ball(position, velocity, batton) {
 function testCollision(ball, batton) {
     //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
-    return (Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s && ball.radius >=R);
+    var angletest = Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s;
+    var radiustest = ball.radius >= R;
+
+    if (!godmode){ //If not in god mode
+        return (angletest && radiustest);
+    }
+    else { //If in god mode
+        return radiustest //Ignore angle test
+    }
 }
 
 //Ball Move
@@ -292,7 +315,7 @@ Ball.prototype.move = function () {
     
     if (this.radius < R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + extra due to one frames worth of velocity), run collision testing
 
-        if (testCollision(this, this.batton)) { //If ball has colided with batton
+        if (testCollision(this, this.batton)) { //If ball has colided with batton, or godmode is on
 
             if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
 
@@ -333,16 +356,15 @@ Ball.prototype.move = function () {
         //this.position.add(this.velocity);
         this.position.x+=scale*this.velocity.x;
         this.position.y+=scale*this.velocity.y;
-        
-        
-            
     } 
+
     else { //If outside outer circle boundary
         sound_miss.play() //Play collision SFX
-        if (gamestart=1) {
-            gameover = 1; //Flag gameover
+        if (gamestart = true) {
+            gameover = true; //Flag gameover
         }
     }
+
 };
 
 //FRAME RATE
@@ -375,7 +397,9 @@ function loop(now) {
     fps = calculateFps(now);
     fpscale = 60/fps;
     level = Math.round((hits+5)/10);
-    scale = fpscale * (1 + 0.15 * (level-1));
+    
+    //Set scale by FPS and level increments
+    scale = fpscale * difficulty(level, 3, 0.25);
 }
 
 //CLEAR CANVAS ON EVERY FRAME
@@ -416,21 +440,21 @@ function timer(delay, ball, batton) {
 var timerstarted = 0; //Has countdown started
 var timervalue = 0; //Countdown value
 
-var game_startable = 1; //Can the game be started? (After gameover, all keys must be released for this to be 1)
+var game_startable = true; //Can the game be started? (After gameover, all keys must be released for this to be 1)
 
 function update(ball, batton) { 
 
-    if (gamestart!=1) { //If game hasn't started
+    if (!gamestart) { //If game hasn't started
 
-        if (game_startable !=1 && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
+        if (!game_startable && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
             console.log("Making game startable")
-            game_startable = 1; //Make game startable once all keys have been let go of
+            game_startable = true; //Make game startable once all keys have been let go of
         }
 
-        if (game_startable==1 && (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown)) { // If game is startable AND any key is pressed
-            if (timerstarted!=1){ // If timer hasn't already started
+        if (game_startable && (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown)) { // If game is startable AND any key is pressed
+            if (!timerstarted){ // If timer hasn't already started
                 console.log("STARTING TIMER")
-                timerstarted = 1; //Flag timer as started
+                timerstarted = true; //Flag timer as started
                 hits = 0; //Reset score
                 timer(3, ball, batton) //Start timer
             }
@@ -438,7 +462,7 @@ function update(ball, batton) {
     }
     
     else {  // If game has started
-        if (gameover!=0) { //If game has started AND gameover
+        if (gameover) { //If game has started AND gameover
             ball.position.x=x0; //Reset x
             ball.position.y=y0; //Reset y
             
@@ -449,15 +473,20 @@ function update(ball, batton) {
 
             keysDown = {}; //Clear keys down
 
-            gamestart = 0; //Stop game
-            game_startable = 0; //Lock game out of starting
+            gamestart = false; //Stop game
+            game_startable = false; //Lock game out of starting
 
             if (hits>topscore){ //If score beats current best
-                topscore=hits; //Update topscore
+                topscore = hits; //Update topscore
             }
             
         }
         else {  //If game has started AND NOT gameover
+            // DEATH MODE
+            if (20 <= level && level <= 30) { // If between levels 20 and 30
+                s = deathpaddle(level, 0.01, 0.4);
+            }
+
             //BATTON MOTION
             batton.move(); //Move batton
             
@@ -470,8 +499,8 @@ function update(ball, batton) {
 function draw(ball, batton) { //DRAW FRAME
 
     //Title
-    if (gamestart!=1) { //If game hasn't started
-        if (timerstarted!=1) { //If countdown hasn't started
+    if (!gamestart) { //If game hasn't started
+        if (!timerstarted) { //If countdown hasn't started
             ctx.font = "normal 22px Verdana";
             ctx.fillStyle = "#ffffff";
             ctx.textAlign="center"; 
@@ -486,17 +515,17 @@ function draw(ball, batton) { //DRAW FRAME
     }
 
     //Gameover screen
-    if (gameover!=0 && timerstarted!=1) {
+    if (gameover && !timerstarted) {
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.fillText("SCORE: " + hits, x0, y0-50);
     }
 
     
     //Ring
-    if (gameover!=0 && timerstarted!=1) { //If gameover and timer now started
+    if (gameover && !timerstarted) { //If gameover and timer not started
         ring_colour = '#FF0000';
     }
-    else if (timerstarted!=0 || (gameover!=1 && gamestart!=1)) { //If timer started, or not gameover but game not started (ie first run)
+    else if (timerstarted || (!gameover && !gamestart)) { //If timer started, or not gameover but game not started (ie first run)
         ring_colour = '#bc7a00';
     }
     else { //If game is running
