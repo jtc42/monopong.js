@@ -520,15 +520,22 @@ function draw(ball, batton) { //DRAW FRAME
 
     //Title
     if (!gamestart) { //If game hasn't started
+
+        ctx.fillStyle = "#ffffff";
+
         if (!timerstarted) { //If countdown hasn't started
-            ctx.font = "normal 22px Verdana";
-            ctx.fillStyle = "#ffffff";
+            ctx.font = "normal 22px monospace";
             ctx.textAlign="center"; 
-            ctx.fillText("TOUCH/KEY TO START", x0, y0+60);
+            ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
+
+            if (!gameover) {
+                ctx.font = "normal 52px monospace";
+                ctx.fillText("MONOPONG", x0, y0-80);
+            }
         }
         else {
-            ctx.font = "normal 52px Verdana";
-            ctx.fillStyle = "#ffffff";
+            ctx.font = "normal 52px monospace";
+
             ctx.textAlign="center"; 
             ctx.fillText(timervalue, x0, y0-80);
         }
@@ -536,7 +543,9 @@ function draw(ball, batton) { //DRAW FRAME
 
     //Gameover screen
     if (gameover && !timerstarted) {
+        ctx.font = "normal 42px monospace";
         ctx.fillText("GAME OVER", x0, y0-80);
+        ctx.font = "normal 22px monospace";
         ctx.fillText("SCORE: " + hits, x0, y0-50);
     }
 
@@ -579,13 +588,12 @@ function draw(ball, batton) { //DRAW FRAME
     ctx.fill();
     
     //Score
-    ctx.font = "normal 18px Verdana";
+    ctx.font = "normal 18px monospace";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign="left"; 
-    ctx.fillText("Hits: " + hits, 50, 50);
-    ctx.fillText("Highscore: " + topscore, 50, 100);
-    ctx.fillText("Level: " + level, 50, 150);
-    
+    ctx.fillText("Level: " + level, 50, 50);
+    ctx.fillText("Hits: " + hits, 50, 100);
+    ctx.fillText("Highscore: " + topscore, 50, 150);
 }
 
 function queue() { //GET NEW FRAME
