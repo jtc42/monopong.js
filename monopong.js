@@ -373,9 +373,9 @@ function loop(now) {
 
     //Get FPS and scale
     fps = calculateFps(now);
-    fpscale=60/fps;
-    level=Math.round((hits+5)/10);
-    scale=fpscale*(1+0.15*(level-1));
+    fpscale = 60/fps;
+    level = Math.round((hits+5)/10);
+    scale = fpscale * (1 + 0.15 * (level-1));
 }
 
 //CLEAR CANVAS ON EVERY FRAME
