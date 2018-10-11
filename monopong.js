@@ -328,7 +328,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     
     //GET BATTON VECTOR
     this.position = GetVector(this.radius, this.angle); //Get batton position from radius and angle
-    this.b_angle = Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check)
+    this.b_angle = Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check) 
     
 };
 
@@ -373,9 +373,10 @@ Ball.prototype.move = function () {
     this.vangle = this.velocity.getAnglev(); //Set velocity angle calculated from velocity vector
 
     //Update position
-    this.position.x+=scale*this.velocity.x;
-    this.position.y+=scale*this.velocity.y;
-    
+    if (bounds(this)) {
+        this.position.x+=scale*this.velocity.x;
+        this.position.y+=scale*this.velocity.y;
+    }
 };
 
 // OUT OF BOUNDS HANDLING (GAME OVER)
@@ -386,7 +387,11 @@ function bounds(ball) {
         if (gamestart = true) {
             gameover = true; //Flag gameover
         }
-    };
+        return false
+    }
+    else {
+        return true
+    }
 }
 
 // COLLISION HANDLING
@@ -394,7 +399,7 @@ function collisions(ball, batton) {
 
     if (testCollision(ball, batton)) { //If ball has colided with batton, or godmode is on
 
-        if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
+        if ((absolute(Math.cos(ball.vangle + ball.pangle))) > 0.5){ //For steep angles
             sound_hit.play() //Play collision SFX
 
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
@@ -418,7 +423,8 @@ function collisions(ball, batton) {
         ball.velocity = GetVectorv(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
         
         if (ball.radius > R){ //If position is greater than inner boundary
-            ball.radius = R; //Set radius to within inner boundary (prevent getting stuck outside)
+            //TODO: Actually do this properly, not just R-20. Jump back by a good, calculated amount
+            ball.radius = R-20; //Set radius to within inner boundary (prevent getting stuck outside)
             ball.position = GetVector(ball.radius, ball.pangle); //Set new position in x and y
         }
         
@@ -448,10 +454,11 @@ var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) // New ball
 function loop(now) {
     //Run main loop
     clear();
-    update(ball_main, batton_main); //Update all positions
+    
     draw(ball_main, batton_main); //Redraw in new positions
-    bounds(ball_main); //Check for game over
+    //bounds(ball_main); //Check for game over
     collisions(ball_main, batton_main); //Handle ball-batton collisions
+    update(ball_main, batton_main); //Update all positions
     queue();
 
     //Get FPS and scale
