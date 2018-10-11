@@ -327,10 +327,8 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
             }
     }
     
-    
-    //Reset batton angle every 2pi radians
+    //Fold the user-controlled angle into -pi to pi, to match the angle-space of the ball
     this.angle = foldAngle(this.angle);
-    
     
     //GET BATTON VECTOR
     this.position = GetVector(this.radius, this.angle); //Get batton position from radius and angle
