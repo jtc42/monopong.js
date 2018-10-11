@@ -381,7 +381,7 @@ Ball.prototype.move = function () {
 // OUT OF BOUNDS HANDLING (GAME OVER)
 function bounds(ball) {
     //If not within outer circle boundary
-    if (!(ball.radius < R + (1.5*scale*ball.vmag))) { 
+    if (ball.radius > R + (1.5*scale*ball.vmag)) { 
         sound_miss.play() //Play collision SFX
         if (gamestart = true) {
             gameover = true; //Flag gameover
