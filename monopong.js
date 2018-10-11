@@ -395,8 +395,6 @@ function collisions(ball, batton) {
     if (testCollision(ball, batton)) { //If ball has colided with batton, or godmode is on
 
         if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
-
-            console.log("STEEP")
             sound_hit.play() //Play collision SFX
 
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
@@ -404,8 +402,6 @@ function collisions(ball, batton) {
         } 
                         
         else { //For shallow angles
-
-            console.log("SHALLOW")
             sound_shallow.play() //Play shallow collision SFX
 
             if (absolute(ball.pangle) > 0.6*Math.PI){ //For left half
