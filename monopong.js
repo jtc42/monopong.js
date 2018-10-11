@@ -371,61 +371,64 @@ Ball.prototype.move = function () {
     
     this.vmag = this.velocity.getMagnitude(); //Set velocity magnitude calculated from velocity vector
     this.vangle = this.velocity.getAnglev(); //Set velocity angle calculated from velocity vector
+
+    //Update position
+    this.position.x+=scale*this.velocity.x;
+    this.position.y+=scale*this.velocity.y;
     
-    
-    if (this.radius < R+(1.5*scale*this.vmag)){ //If within outer circle boundary (circle radius + extra due to one frames worth of velocity), run collision testing
+};
 
-        if (testCollision(this, this.batton)) { //If ball has colided with batton, or godmode is on
-
-            if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
-
-                console.log("STEEP")
-                sound_hit.play() //Play collision SFX
-
-                //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-                this.vangle = Math.PI - this.vangle - 2*this.pangle - w*0.3*cube(absolute(Math.cos(ball_main.vangle+ball_main.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
-            } 
-                            
-            else { //For shallow angles
-
-                console.log("SHALLOW")
-                sound_shallow.play() //Play shallow collision SFX
-
-                if (absolute(this.pangle) > 0.6*Math.PI){ //For left half
-                    //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
-                    this.vangle = Math.PI - this.vangle - 2*this.pangle -(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
-                } 
-                else { //For right half
-                    //Calculate new physical velocity angle, plus small random component opposing natural velocity (deflect away from edge)
-                    this.vangle = Math.PI - this.vangle - 2*this.pangle +(this.vangle/absolute(this.vangle))*(Math.random()*0.5*Math.PI +0.3);
-                } 
-                                
-            } //For shallow angles
-            
-            this.velocity= GetVectorv(this.vmag,this.vangle); //Update velocity vector after collision, from magnitude and angle
-            
-            if (this.radius > R){ //If position is greater than inner boundary
-                this.radius = R; //Set radius to within inner boundary (prevent getting stuck outside)
-                this.position = GetVector(this.radius, this.pangle); //Set new position in x and y
-            }
-            
-            hits+=1; //Add one hit on collision
-        }
-        
-        //UPDATE POSITION (collision or not)
-        //this.position.add(this.velocity);
-        this.position.x+=scale*this.velocity.x;
-        this.position.y+=scale*this.velocity.y;
-    } 
-
-    else { //If outside outer circle boundary
+// OUT OF BOUNDS HANDLING (GAME OVER)
+function bounds(ball) {
+    //If not within outer circle boundary
+    if (!(ball.radius < R + (1.5*scale*ball.vmag))) { 
         sound_miss.play() //Play collision SFX
         if (gamestart = true) {
             gameover = true; //Flag gameover
         }
-    }
+    };
+}
 
-};
+// COLLISION HANDLING
+function collisions(ball, batton) {
+
+    if (testCollision(ball, batton)) { //If ball has colided with batton, or godmode is on
+
+        if ((absolute(Math.cos(ball_main.vangle+ball_main.pangle))) > 0.5){ //For steep angles
+
+            console.log("STEEP")
+            sound_hit.play() //Play collision SFX
+
+            //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
+            ball.vangle = Math.PI - ball.vangle - 2*ball.pangle - w*0.3*cube(absolute(Math.cos(ball.vangle+ball.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
+        } 
+                        
+        else { //For shallow angles
+
+            console.log("SHALLOW")
+            sound_shallow.play() //Play shallow collision SFX
+
+            if (absolute(ball.pangle) > 0.6*Math.PI){ //For left half
+                //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
+                ball.vangle = Math.PI - ball.vangle - 2*ball.pangle - (ball.vangle/absolute(ball.vangle))*(Math.random()*0.5*Math.PI +0.3);
+            } 
+            else { //For right half
+                //Calculate new physical velocity angle, plus small random component opposing natural velocity (deflect away from edge)
+                ball.vangle = Math.PI - ball.vangle - 2*ball.pangle + (ball.vangle/absolute(ball.vangle))*(Math.random()*0.5*Math.PI +0.3);
+            } 
+                            
+        } //For shallow angles
+        
+        ball.velocity = GetVectorv(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
+        
+        if (ball.radius > R){ //If position is greater than inner boundary
+            ball.radius = R; //Set radius to within inner boundary (prevent getting stuck outside)
+            ball.position = GetVector(ball.radius, ball.pangle); //Set new position in x and y
+        }
+        
+        hits+=1; //Add one hit on collision
+    }
+}
 
 //FRAME RATE
 var lastAnimationFrameTime = 0, lastFpsUpdateTime = 0;
@@ -449,8 +452,10 @@ var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) // New ball
 function loop(now) {
     //Run main loop
     clear();
-    update(ball_main, batton_main);
-    draw(ball_main, batton_main);
+    update(ball_main, batton_main); //Update all positions
+    draw(ball_main, batton_main); //Redraw in new positions
+    bounds(ball); //Check for game over
+    collisions(ball_main, batton_main); //Handle ball-batton collisions
     queue();
 
     //Get FPS and scale
