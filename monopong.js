@@ -285,7 +285,6 @@ function Batton(r, t) {
     this.position = new Vector(GetX(r,t), GetY(r,t)); //Calculate position from radius and angle
     this.radius = r; //Add radius as a function of a batton object
     this.angle = t; //Add angle as a function of a batton object
-    this.b_angle = 0;
 }
 
 //Batton Move
@@ -328,7 +327,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     
     //GET BATTON VECTOR
     this.position = GetVector(this.radius, this.angle); //Get batton position from radius and angle
-    this.b_angle = Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check) 
+    
 };
 
 
@@ -353,7 +352,7 @@ function Ball(position, velocity, size, batton) {
 function testCollision(ball, batton) {
     //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
-    var angletest = Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s;
+    var angletest = ball.pangle > batton.angle-0.5*s && ball.pangle < batton.angle+0.5*s;
     var radiustest = ball.pradius >= R - ball.size;
 
     if (!godMode){ //If not in god mode
