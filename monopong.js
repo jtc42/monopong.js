@@ -464,7 +464,7 @@ function loop(now) {
     level = Math.round((hits+5)/10);
     
     //Set scale by FPS and level increments
-    scale = fpscale * difficulty(level, 3, 0.25);
+    scale = fpscale * difficulty(level, 3.8, 0.18);
 }
 
 //CLEAR CANVAS ON EVERY FRAME
