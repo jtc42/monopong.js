@@ -335,12 +335,14 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
 
 //BALL
 //Define ball as an object, reading position and velocity vectors
-function Ball(position, velocity, batton) {
+function Ball(position, velocity, size, batton) {
     this.position = position || new Vector(x0,y0); //Set ball.position to given vector, or default to centre
     this.velocity = velocity || new Vector(0,0); //Set ball.velocity to given vector, or default to zero
     
-    this.radius = 0; //Initial radius
+    this.pradius = 0; //Initial position radius
     this.pangle = 0; //Initial position angle
+
+    this.size = size; //Ball size radius
     
     this.vmag = 0; //Initial velocity magnitude
     this.vangle = 0; //Initial velocity angle
@@ -353,7 +355,7 @@ function testCollision(ball, batton) {
     //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
     var angletest = Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s;
-    var radiustest = ball.radius >= R;
+    var radiustest = ball.pradius >= R - ball.size;
 
     if (!godmode){ //If not in god mode
         return (angletest && radiustest);
@@ -366,7 +368,7 @@ function testCollision(ball, batton) {
 //Ball Move
 Ball.prototype.move = function () {
     
-    this.radius = this.position.getRadius(); //Set radius calculated from position
+    this.pradius = this.position.getRadius(); //Set radius calculated from position
     this.pangle = this.position.getAngle(); //Set position angle calculated from position
     
     this.vmag = this.velocity.getMagnitude(); //Set velocity magnitude calculated from velocity vector
@@ -382,7 +384,7 @@ Ball.prototype.move = function () {
 // OUT OF BOUNDS HANDLING (GAME OVER)
 function bounds(ball) {
     //If not within outer circle boundary
-    if (ball.radius > R + (1.5*scale*ball.vmag)) { 
+    if (ball.pradius > R + (1.5*scale*ball.vmag)) { 
         sound_miss.play() //Play collision SFX
         if (gamestart = true) {
             gameover = true; //Flag gameover
@@ -422,10 +424,9 @@ function collisions(ball, batton) {
         
         ball.velocity = GetVectorv(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
         
-        if (ball.radius > R){ //If position is greater than inner boundary
-            //TODO: Actually do this properly, not just R-20. Jump back by a good, calculated amount
-            ball.radius = R-20; //Set radius to within inner boundary (prevent getting stuck outside)
-            ball.position = GetVector(ball.radius, ball.pangle); //Set new position in x and y
+        if (ball.pradius > R - ball.size){ //If position is greater than inner boundary
+            ball.pradius = R - ball.size - ball.vmag; //Set radius to within inner boundary (prevent getting stuck outside)
+            ball.position = GetVector(ball.pradius, ball.pangle); //Set new position in x and y
         }
         
         hits+=1; //Add one hit on collision
@@ -448,17 +449,16 @@ function calculateFps(now) {
 
 // Create objects for game
 var batton_main = new Batton(R, 0.5*Math.PI); // Make a new batton at top of circle
-var ball_main = new Ball(Vector(x0, y0), Vector(0,0), batton_main) // New ball
+var ball_main = new Ball(Vector(x0, y0), Vector(0,0), 0.032*R, batton_main) // New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
     //Run main loop
     clear();
-    
-    draw(ball_main, batton_main); //Redraw in new positions
-    //bounds(ball_main); //Check for game over
-    collisions(ball_main, batton_main); //Handle ball-batton collisions
     update(ball_main, batton_main); //Update all positions
+    collisions(ball_main, batton_main); //Handle ball-batton collisions
+    draw(ball_main, batton_main); //Redraw in new positions
+    
     queue();
 
     //Get FPS and scale
@@ -476,12 +476,11 @@ function clear() {
 }
 
 //STARTS GAME
-function startgame(ball, batton) {
+function startgame(ball) {
     ball.velocity = new Vector(0.0, -0.024*R); //Give ball an initial velocity
     gamestart = 1; //Set game as started
     gameover = 0; //Clear gameover flag
     sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
-    
 }
 
 //START GAME TIMER
@@ -636,7 +635,7 @@ function draw(ball, batton) { //DRAW FRAME
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
-    ctx.arc(ball.position.x, ball.position.y, 0.032*R, 0, 2*Math.PI, false);
+    ctx.arc(ball.position.x, ball.position.y, ball.size, 0, 2*Math.PI, false);
     ctx.fill();
     
     //Score
