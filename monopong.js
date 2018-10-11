@@ -175,23 +175,11 @@ soundMiss = new sound("./ping_pong_8bit_peeeeeep.wav");
 
 // BASIC FUNCTIONS
 
-function foldAngle(angle) {
+function foldAngle(angle) { //Fold an arbitrary angle into -pi to pi
     if (angle >= Math.PI) {
         return angle - 2*Math.PI;
     }
     else if (angle < -Math.PI) {
-        return angle + 2*Math.PI;
-    }
-    else {
-        return angle
-    }
-}
-
-function foldAngl2(angle) {
-    if (angle >= 2*Math.PI) {
-        return angle - 2*Math.PI;
-    }
-    else if (angle < 0) {
         return angle + 2*Math.PI;
     }
     else {
