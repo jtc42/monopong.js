@@ -1,6 +1,5 @@
 //TODO: Try and override long press vibration on mobile
 //TODO: Scale text, batton, and ring line to ring radius
-//TODO: Improve collision detection, because it is quite bad
 //TODO: Add savedata system
 //TODO: Shiny up
 
@@ -70,10 +69,7 @@ function resizeCanvas() {
 }
 
 //DEFINITIONS
-var scale = 1;  //Animation scalar
-
-var s = 0.2*Math.PI;  //Batton angular size
-var w = 0;  //Initial angular frequency of batton
+var speedScale = 1;  //Animation scalar
 
 var gameStart = false; //Game active
 var gameOver = false; //Has gameOver occured
@@ -178,6 +174,31 @@ soundShallow = new sound("./ping_pong_8bit_beeep.wav");
 soundMiss = new sound("./ping_pong_8bit_peeeeeep.wav");
 
 // BASIC FUNCTIONS
+
+function foldAngle(angle) {
+    if (angle >= Math.PI) {
+        return angle - 2*Math.PI;
+    }
+    else if (angle < -Math.PI) {
+        return angle + 2*Math.PI;
+    }
+    else {
+        return angle
+    }
+}
+
+function foldAngl2(angle) {
+    if (angle >= 2*Math.PI) {
+        return angle - 2*Math.PI;
+    }
+    else if (angle < 0) {
+        return angle + 2*Math.PI;
+    }
+    else {
+        return angle
+    }
+}
+
 function isEmpty(obj) { //Test for empty arrays
     return Object.keys(obj).length === 0;
 }
@@ -285,44 +306,42 @@ function Batton(r, t) {
     this.position = new Vector(GetX(r,t), GetY(r,t)); //Calculate position from radius and angle
     this.radius = r; //Add radius as a function of a batton object
     this.angle = t; //Add angle as a function of a batton object
+
+    this.angularVelocity = 0; //Initial angular velocity
+    this.size = 0.2*Math.PI;
 }
 
 //Batton Move
 Batton.prototype.move = function() { //Add move as a function unique to each batton
     
-    w=0; //Reset angular velocity to zero
+    this.angularVelocity = 0; //Reset angular velocity to zero
     
     //KEYBOARD CONTROL (Tidy up, shift condition once that adds a scalar to left and right)
     if (leftKeyID in keysDown) { // Left down
         if (16 in keysDown) { //Shift down
-            this.angle+=scale*0.04*Math.PI; //Add double angle
-            w=2; //Set double w
+            this.angle+=speedScale*0.04*Math.PI; //Add double angle
+            this.angularVelocity = 2; //Set double angularVelocity
         }
         else { //Shift not down
-            this.angle+=scale*0.02*Math.PI; //Add single angle
-            w=1; //Set single w
+            this.angle+=speedScale*0.02*Math.PI; //Add single angle
+            this.angularVelocity = 1; //Set single angularVelocity
         }
     }
     
     if (rightKeyID in keysDown) { // Right down
         if (16 in keysDown) { //Shift down
-            this.angle-=scale*0.04*Math.PI; //Add double angle
-            w=-2; //Set double w
+            this.angle-=speedScale*0.04*Math.PI; //Add double angle
+            this.angularVelocity = -2; //Set double angularVelocity
                 }
         else {//Shift not down
-            this.angle-=scale*0.02*Math.PI; //Add single angle
-            w=-1; //Set single w
+            this.angle-=speedScale*0.02*Math.PI; //Add single angle
+            this.angularVelocity = -1; //Set single angularVelocity
             }
     }
     
     
     //Reset batton angle every 2pi radians
-    if (this.angle>=2*Math.PI) {
-        this.angle= this.angle - 2*Math.PI;
-    }
-    if (this.angle<=-2*Math.PI) {
-        this.angle= this.angle + 2*Math.PI;
-    }
+    this.angle = foldAngle(this.angle);
     
     
     //GET BATTON VECTOR
@@ -337,13 +356,13 @@ function Ball(position, velocity, size, batton) {
     this.position = position || new Vector(x0,y0); //Set ball.position to given vector, or default to centre
     this.velocity = velocity || new Vector(0,0); //Set ball.velocity to given vector, or default to zero
     
-    this.pradius = 0; //Initial position radius
-    this.pangle = 0; //Initial position angle
+    this.positionRadius = 0; //Initial position radius
+    this.positionAngle = 0; //Initial position angle
 
     this.size = size; //Ball size radius
     
-    this.vmag = 0; //Initial velocity magnitude
-    this.vangle = 0; //Initial velocity angle
+    this.velocityRadius = 0; //Initial velocity magnitude
+    this.velocityAngle = 0; //Initial velocity angle
 
     this.batton = batton; //Attached batton object
 }
@@ -352,37 +371,39 @@ function Ball(position, velocity, size, batton) {
 function testCollision(ball, batton) {
     //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
-    var angletest = ball.pangle > batton.angle-0.5*s && ball.pangle < batton.angle+0.5*s;
-    var radiustest = ball.pradius >= R - ball.size;
+    var angleTest = ball.positionAngle > batton.angle-0.5*batton.size && ball.positionAngle < batton.angle+0.5*batton.size;
+    var radiusTest = ball.positionRadius >= R - ball.size;
+
+    console.log(ball.positionAngle, batton.angle-0.5*batton.size, batton.angle+0.5*batton.size)
 
     if (!godMode){ //If not in god mode
-        return (angletest && radiustest);
+        return (angleTest && radiusTest);
     }
     else { //If in god mode
-        return radiustest //Ignore angle test
+        return radiusTest //Ignore angle test
     }
 }
 
 //Ball Move
 Ball.prototype.move = function () {
     
-    this.pradius = this.position.getRadius(); //Set radius calculated from position
-    this.pangle = this.position.getAngle(); //Set position angle calculated from position
+    this.positionRadius = this.position.getRadius(); //Set radius calculated from position
+    this.positionAngle = this.position.getAngle(); //Set position angle calculated from position
     
-    this.vmag = this.velocity.getMagnitude(); //Set velocity magnitude calculated from velocity vector
-    this.vangle = this.velocity.getAnglev(); //Set velocity angle calculated from velocity vector
+    this.velocityRadius = this.velocity.getMagnitude(); //Set velocity magnitude calculated from velocity vector
+    this.velocityAngle = this.velocity.getAnglev(); //Set velocity angle calculated from velocity vector
 
     //Update position
     if (bounds(this)) {
-        this.position.x+=scale*this.velocity.x;
-        this.position.y+=scale*this.velocity.y;
+        this.position.x+=speedScale*this.velocity.x;
+        this.position.y+=speedScale*this.velocity.y;
     }
 };
 
 // OUT OF BOUNDS HANDLING (GAME OVER)
 function bounds(ball) {
     //If not within outer circle boundary
-    if (ball.pradius > R + (1.5*scale*ball.vmag)) { 
+    if (ball.positionRadius > R + (1.5*speedScale*ball.velocityRadius)) { 
         soundMiss.play() //Play collision SFX
         if (gameStart = true) {
             gameOver = true; //Flag gameOver
@@ -399,32 +420,32 @@ function collisions(ball, batton) {
 
     if (testCollision(ball, batton)) { //If ball has colided with batton, or godMode is on
 
-        if ((absolute(Math.cos(ball.vangle + ball.pangle))) > 0.5){ //For steep angles
+        if ((absolute(Math.cos(ball.velocityAngle + ball.positionAngle))) > 0.5){ //For steep angles
             soundHit.play() //Play collision SFX
 
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-            ball.vangle = Math.PI - ball.vangle - 2*ball.pangle - w*0.3*cube(absolute(Math.cos(ball.vangle+ball.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
+            ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - batton.angularVelocity*0.3*cube(absolute(Math.cos(ball.velocityAngle+ball.positionAngle))) +(Math.random()-0.5)*0.2*Math.PI; 
         } 
                         
         else { //For shallow angles
             soundShallow.play() //Play shallow collision SFX
 
-            if (absolute(ball.pangle) > 0.6*Math.PI){ //For left half
+            if (absolute(ball.positionAngle) > 0.6*Math.PI){ //For left half
                 //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
-                ball.vangle = Math.PI - ball.vangle - 2*ball.pangle - (ball.vangle/absolute(ball.vangle))*(Math.random()*0.5*Math.PI +0.3);
+                ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - (ball.velocityAngle/absolute(ball.velocityAngle))*(Math.random()*0.5*Math.PI +0.3);
             } 
             else { //For right half
                 //Calculate new physical velocity angle, plus small random component opposing natural velocity (deflect away from edge)
-                ball.vangle = Math.PI - ball.vangle - 2*ball.pangle + (ball.vangle/absolute(ball.vangle))*(Math.random()*0.5*Math.PI +0.3);
+                ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle + (ball.velocityAngle/absolute(ball.velocityAngle))*(Math.random()*0.5*Math.PI +0.3);
             } 
                             
         } //For shallow angles
         
-        ball.velocity = GetVectorV(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
+        ball.velocity = GetVectorV(ball.velocityRadius, ball.velocityAngle); //Update velocity vector after collision, from magnitude and angle
         
-        if (ball.pradius > R - ball.size){ //If position is greater than inner boundary
-            ball.pradius = R - ball.size - ball.vmag; //Set radius to within inner boundary (prevent getting stuck outside)
-            ball.position = GetVector(ball.pradius, ball.pangle); //Set new position in x and y
+        if (ball.positionRadius > R - ball.size){ //If position is greater than inner boundary
+            ball.positionRadius = R - ball.size - ball.velocityRadius; //Set radius to within inner boundary (prevent getting stuck outside)
+            ball.position = GetVector(ball.positionRadius, ball.positionAngle); //Set new position in x and y
         }
         
         hits+=1; //Add one hit on collision
@@ -446,26 +467,26 @@ function calculateFps(now) {
 }
 
 // Create objects for game
-var batton_main = new Batton(R, 0.5*Math.PI); // Make a new batton at top of circle
-var ball_main = new Ball(Vector(x0, y0), Vector(0,0), 0.032*R, batton_main) // New ball
+var battonMain = new Batton(R, 0.5*Math.PI); // Make a new batton at top of circle
+var ballMain = new Ball(Vector(x0, y0), Vector(0,0), 0.032*R, battonMain) // New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
     //Run main loop
     clear();
-    update(ball_main, batton_main); //Update all positions
-    collisions(ball_main, batton_main); //Handle ball-batton collisions
-    draw(ball_main, batton_main); //Redraw in new positions
+    update(ballMain, battonMain); //Update all positions
+    collisions(ballMain, battonMain); //Handle ball-batton collisions
+    draw(ballMain, battonMain); //Redraw in new positions
     
     queue();
 
-    //Get FPS and scale
+    //Get FPS and speedScale
     fps = calculateFps(now);
-    fpscale = 60/fps;
+    fpsScale = 60/fps;
     level = Math.round((hits+5)/10);
     
-    //Set scale by FPS and level increments
-    scale = fpscale * difficulty(level, 3.8, 0.18);
+    //Set speedScale by FPS and level increments
+    speedScale = fpsScale * difficulty(level, 3.8, 0.18);
 }
 
 //CLEAR CANVAS ON EVERY FRAME
@@ -483,29 +504,29 @@ function startgame(ball) {
 
 //START GAME TIMER
 function timer(delay, ball, batton) {
-    timervalue = delay;
+    timerValue = delay;
     soundHit.play() //Play collision SFX
 
     var startTimer = setInterval(function(){
-        timervalue--;
-        if(timervalue <= 0) { //If at zero
+        timerValue--;
+        if(timerValue <= 0) { //If at zero
             console.log("DONE")
-            timerstarted = 0; //Stop timer
+            timerStarted = false; //Stop timer
             startgame(ball, batton)
             console.log("CLEAR")
             clearInterval(startTimer);
         }
         else { //If not zero
-            console.log(timervalue)
+            console.log(timerValue)
             soundHit.play() //Play collision SFX
         }
     },1000);
 }
 
-var timerstarted = 0; //Has countdown started
-var timervalue = 0; //Countdown value
+var timerStarted = false; //Has countdown started
+var timerValue = 0; //Countdown value
 
-var game_startable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
+var gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
 function update(ball, batton) { 
 
@@ -515,15 +536,15 @@ function update(ball, batton) {
         ball.position.x = x0; //Reset x
         ball.position.y = y0; //Reset y
 
-        if (!game_startable && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
+        if (!gameStartable && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
             console.log("Making game startable")
-            game_startable = true; //Make game startable once all keys have been let go of
+            gameStartable = true; //Make game startable once all keys have been let go of
         }
 
-        if (game_startable && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game is startable AND any key is pressed
-            if (!timerstarted){ // If timer hasn't already started
+        if (gameStartable && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game is startable AND any key is pressed
+            if (!timerStarted){ // If timer hasn't already started
                 console.log("STARTING TIMER")
-                timerstarted = true; //Flag timer as started
+                timerStarted = true; //Flag timer as started
                 hits = 0; //Reset score
                 timer(3, ball, batton) //Start timer
             }
@@ -538,12 +559,12 @@ function update(ball, batton) {
             ball.velocity.x = 0; //Reset vx
             ball.velocity.y = 0; //Reset vy
             
-            batton_main.angle=0.5*Math.PI; //Reset Batton
+            battonMain.angle=0.5*Math.PI; //Reset Batton
 
             keysDown = {}; //Clear keys down
 
             gameStart = false; //Stop game
-            game_startable = false; //Lock game out of starting
+            gameStartable = false; //Lock game out of starting
 
             if (hits>topScore){ //If score beats current best
                 topScore = hits; //Update topScore
@@ -553,7 +574,7 @@ function update(ball, batton) {
         else {  //If game has started AND NOT gameOver
             // DEATH MODE
             if (20 <= level && level <= 30) { // If between levels 20 and 30
-                s = deathPaddle(level, 0.01, 0.4);
+                batton.size = deathPaddle(level, 0.01, 0.4);
             }
 
             //BATTON MOTION
@@ -572,7 +593,7 @@ function draw(ball, batton) { //DRAW FRAME
 
         ctx.fillStyle = "#ffffff";
 
-        if (!timerstarted) { //If countdown hasn't started
+        if (!timerStarted) { //If countdown hasn't started
             ctx.font = "normal 22px monospace";
             ctx.textAlign="center"; 
             ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
@@ -586,12 +607,12 @@ function draw(ball, batton) { //DRAW FRAME
             ctx.font = "normal 52px monospace";
 
             ctx.textAlign="center"; 
-            ctx.fillText(timervalue, x0, y0-80);
+            ctx.fillText(timerValue, x0, y0-80);
         }
     }
 
     //Gameover screen
-    if (gameOver && !timerstarted) {
+    if (gameOver && !timerStarted) {
         ctx.font = "normal 42px monospace";
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.font = "normal 22px monospace";
@@ -600,32 +621,32 @@ function draw(ball, batton) { //DRAW FRAME
 
     
     //Ring
-    if (gameOver && !timerstarted) { //If gameOver and timer not started
-        ring_colour = '#FF0000';
+    if (gameOver && !timerStarted) { //If gameOver and timer not started
+        ringColour = '#FF0000';
     }
-    else if (timerstarted || (!gameOver && !gameStart)) { //If timer started, or not gameOver but game not started (ie first run)
-        ring_colour = '#bc7a00';
+    else if (timerStarted || (!gameOver && !gameStart)) { //If timer started, or not gameOver but game not started (ie first run)
+        ringColour = '#bc7a00';
     }
     else { //If game is running
-        ring_colour = '#00bca6';
+        ringColour = '#00bca6';
     }
 
     ctx.beginPath();
     ctx.arc(x0,y0,R,0,2*Math.PI);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = ring_colour;
+    ctx.strokeStyle = ringColour;
     ctx.stroke();
     
     //Batton decoration
     ctx.beginPath();
-    ctx.arc(x0, y0, R+2, batton.angle-s, batton.angle+s);
+    ctx.arc(x0, y0, R+2, batton.angle-batton.size, batton.angle+batton.size);
     ctx.lineWidth = 6;
-    ctx.strokeStyle = ring_colour;
+    ctx.strokeStyle = ringColour;
     ctx.stroke();
 
     //Batton
     ctx.beginPath();
-    ctx.arc(x0, y0, R+4, -batton.angle-0.5*s, -batton.angle+0.5*s);
+    ctx.arc(x0, y0, R+4, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
