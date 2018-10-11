@@ -450,7 +450,7 @@ function loop(now) {
     clear();
     update(ball_main, batton_main); //Update all positions
     draw(ball_main, batton_main); //Redraw in new positions
-    bounds(ball); //Check for game over
+    bounds(ball_main); //Check for game over
     collisions(ball_main, batton_main); //Handle ball-batton collisions
     queue();
 
