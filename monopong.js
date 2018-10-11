@@ -37,8 +37,8 @@ canvas.height = viewHeight * scale;
 ctx.scale(scale, scale);
 
 // Canvas-scaled dimensions
-var smaller_dim = Math.min(viewWidth, viewHeight);
-var R = smaller_dim /2.4;  //Circle Radius
+var smallerDim = Math.min(viewWidth, viewHeight);
+var R = smallerDim /2.4;  //Circle Radius
 
 var x0 = 0.5*viewWidth;  //Centre x
 var y0 = 0.5*viewHeight;  //Centre y
@@ -62,8 +62,8 @@ function resizeCanvas() {
     ctx.scale(scale, scale);   
 
     // Canvas-scaled dimensions
-    smaller_dim = Math.min(viewWidth, viewHeight);
-    R = smaller_dim /2.4;  //Circle Radius
+    smallerDim = Math.min(viewWidth, viewHeight);
+    R = smallerDim /2.4;  //Circle Radius
 
     x0 = 0.5*viewWidth;  //Centre x
     y0 = 0.5*viewHeight;  //Centre y
@@ -75,14 +75,14 @@ var scale = 1;  //Animation scalar
 var s = 0.2*Math.PI;  //Batton angular size
 var w = 0;  //Initial angular frequency of batton
 
-var gamestart = false; //Game active
-var gameover = false; //Has gameover occured
+var gameStart = false; //Game active
+var gameOver = false; //Has gameOver occured
 
 var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
-var topscore = 0; //High score
+var topScore = 0; //High score
 
-var godmode = false; //Never lose god mode
+var godMode = false; //Never lose god mode
 
 
 
@@ -111,9 +111,9 @@ if (document.addEventListener) {
 // HANDLE CONTROLS
 
 // Key IDs
-var left_keyid = 37;
-var right_keyid = 39;
-var enter_keyid = 13;
+var leftKeyID = 37;
+var rightKeyID = 39;
+var enterKeyID = 13;
 
 var keysDown = {}; //Array of keys down
 
@@ -140,20 +140,20 @@ function getTouchPos(canvasDom, touchEvent) {
 canvas.addEventListener("touchstart", function (e) {
     mousePos = getTouchPos(canvas, e);
     if (mousePos['x'] < x0) {
-        keysDown[left_keyid] = true; //Add key to array (emulates a keyboard keypress)
+        keysDown[leftKeyID] = true; //Add key to array (emulates a keyboard keypress)
     }
     else {
-        keysDown[right_keyid] = true; //Add key to array (emulates a keyboard keypress)
+        keysDown[rightKeyID] = true; //Add key to array (emulates a keyboard keypress)
     }
 
 }, false);
 
 canvas.addEventListener("touchend", function (e) {
     if (mousePos['x'] < x0) {
-        delete keysDown[left_keyid]; //Remove key from array (emulates a keyboard key release)
+        delete keysDown[leftKeyID]; //Remove key from array (emulates a keyboard key release)
     }
     else {
-        delete keysDown[right_keyid]; //Remove key from array (emulates a keyboard key release)
+        delete keysDown[rightKeyID]; //Remove key from array (emulates a keyboard key release)
     }
 }, false);
 
@@ -173,9 +173,9 @@ function sound(src) {
     }
 }
 
-sound_hit = new sound("./ping_pong_8bit_plop.wav");
-sound_shallow = new sound("./ping_pong_8bit_beeep.wav");
-sound_miss = new sound("./ping_pong_8bit_peeeeeep.wav");
+soundHit = new sound("./ping_pong_8bit_plop.wav");
+soundShallow = new sound("./ping_pong_8bit_beeep.wav");
+soundMiss = new sound("./ping_pong_8bit_peeeeeep.wav");
 
 // BASIC FUNCTIONS
 function isEmpty(obj) { //Test for empty arrays
@@ -190,7 +190,7 @@ function difficulty(t, a, b) { //Sigmoidal difficulty curve
     return a*(sigmoid(b*(t - 1)) - 0.5) + 1;
 }
 
-function deathpaddle(t, a, b) { //Value of s for linearly decreasing paddle size in death mode
+function deathPaddle(t, a, b) { //Value of s for linearly decreasing paddle size in death mode
     return Math.PI*(-a*t + b);
 }
 
@@ -226,33 +226,33 @@ Vector.prototype.add = function(vector) {
 
 
 //Position to Vector (accounts for relative to centre of circle)
-function Getx(r,t) { //Get x from R and angle
+function GetX(r,t) { //Get x from R and angle
     return r*Math.cos(t) +x0;
 }
 
-function Gety(r,t) { //Get y from R and angle
+function GetY(r,t) { //Get y from R and angle
     return y0 -r*Math.sin(t);
 }
 
-function GetVector(r,t) { //Combine Getx and Gety
-    var x = Getx(r,t);
-    var y = Gety(r,t);
+function GetVector(r,t) { //Combine GetX and GetY
+    var x = GetX(r,t);
+    var y = GetY(r,t);
     return new Vector(x,y); //Set x and y values
 }
 
 
 //Velocity to Vector (does not need to account for relative to centre of circle)
-function Getvx(r,t) { //Get vx from R and angle
+function GetVX(r,t) { //Get vx from R and angle
     return r*Math.cos(t);
 }
 
-function Getvy(r,t) { //Get vy from R and angle
+function GetVY(r,t) { //Get vy from R and angle
     return r*Math.sin(t);
 }
 
-function GetVectorv(r,t) { //Combine Getvx and Getvy
-    var x = Getvx(r,t);
-    var y = Getvy(r,t);
+function GetVectorV(r,t) { //Combine GetVX and GetVY
+    var x = GetVX(r,t);
+    var y = GetVY(r,t);
     return new Vector(x,y); //Set x and y values
 }
 
@@ -282,7 +282,7 @@ Vector.prototype.getAnglev = function () { //Add as function of particular vecto
 //BATTON
 //Define batton as an object, reading radius and angle
 function Batton(r, t) { 
-    this.position = new Vector(Getx(r,t), Gety(r,t)); //Calculate position from radius and angle
+    this.position = new Vector(GetX(r,t), GetY(r,t)); //Calculate position from radius and angle
     this.radius = r; //Add radius as a function of a batton object
     this.angle = t; //Add angle as a function of a batton object
     this.b_angle = 0;
@@ -294,7 +294,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     w=0; //Reset angular velocity to zero
     
     //KEYBOARD CONTROL (Tidy up, shift condition once that adds a scalar to left and right)
-    if (left_keyid in keysDown) { // Left down
+    if (leftKeyID in keysDown) { // Left down
         if (16 in keysDown) { //Shift down
             this.angle+=scale*0.04*Math.PI; //Add double angle
             w=2; //Set double w
@@ -305,7 +305,7 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
         }
     }
     
-    if (right_keyid in keysDown) { // Right down
+    if (rightKeyID in keysDown) { // Right down
         if (16 in keysDown) { //Shift down
             this.angle-=scale*0.04*Math.PI; //Add double angle
             w=-2; //Set double w
@@ -329,7 +329,6 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     //GET BATTON VECTOR
     this.position = GetVector(this.radius, this.angle); //Get batton position from radius and angle
     this.b_angle = Math.asin(Math.sin(this.angle)); //Set b_angle to arcsin of sin of angle (Keeps +ve and -ve in check) 
-    
 };
 
 
@@ -357,7 +356,7 @@ function testCollision(ball, batton) {
     var angletest = Math.asin(Math.sin(ball.pangle)) > batton.b_angle-0.5*s && Math.asin(Math.sin(ball.pangle)) < batton.b_angle+0.5*s;
     var radiustest = ball.pradius >= R - ball.size;
 
-    if (!godmode){ //If not in god mode
+    if (!godMode){ //If not in god mode
         return (angletest && radiustest);
     }
     else { //If in god mode
@@ -385,9 +384,9 @@ Ball.prototype.move = function () {
 function bounds(ball) {
     //If not within outer circle boundary
     if (ball.pradius > R + (1.5*scale*ball.vmag)) { 
-        sound_miss.play() //Play collision SFX
-        if (gamestart = true) {
-            gameover = true; //Flag gameover
+        soundMiss.play() //Play collision SFX
+        if (gameStart = true) {
+            gameOver = true; //Flag gameOver
         }
         return false
     }
@@ -399,17 +398,17 @@ function bounds(ball) {
 // COLLISION HANDLING
 function collisions(ball, batton) {
 
-    if (testCollision(ball, batton)) { //If ball has colided with batton, or godmode is on
+    if (testCollision(ball, batton)) { //If ball has colided with batton, or godMode is on
 
         if ((absolute(Math.cos(ball.vangle + ball.pangle))) > 0.5){ //For steep angles
-            sound_hit.play() //Play collision SFX
+            soundHit.play() //Play collision SFX
 
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
             ball.vangle = Math.PI - ball.vangle - 2*ball.pangle - w*0.3*cube(absolute(Math.cos(ball.vangle+ball.pangle))) +(Math.random()-0.5)*0.2*Math.PI; 
         } 
                         
         else { //For shallow angles
-            sound_shallow.play() //Play shallow collision SFX
+            soundShallow.play() //Play shallow collision SFX
 
             if (absolute(ball.pangle) > 0.6*Math.PI){ //For left half
                 //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
@@ -422,7 +421,7 @@ function collisions(ball, batton) {
                             
         } //For shallow angles
         
-        ball.velocity = GetVectorv(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
+        ball.velocity = GetVectorV(ball.vmag, ball.vangle); //Update velocity vector after collision, from magnitude and angle
         
         if (ball.pradius > R - ball.size){ //If position is greater than inner boundary
             ball.pradius = R - ball.size - ball.vmag; //Set radius to within inner boundary (prevent getting stuck outside)
@@ -478,15 +477,15 @@ function clear() {
 //STARTS GAME
 function startgame(ball) {
     ball.velocity = new Vector(0.0, -0.024*R); //Give ball an initial velocity
-    gamestart = 1; //Set game as started
-    gameover = 0; //Clear gameover flag
-    sound_shallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+    gameStart = 1; //Set game as started
+    gameOver = 0; //Clear gameOver flag
+    soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 }
 
 //START GAME TIMER
 function timer(delay, ball, batton) {
     timervalue = delay;
-    sound_hit.play() //Play collision SFX
+    soundHit.play() //Play collision SFX
 
     var startTimer = setInterval(function(){
         timervalue--;
@@ -499,7 +498,7 @@ function timer(delay, ball, batton) {
         }
         else { //If not zero
             console.log(timervalue)
-            sound_hit.play() //Play collision SFX
+            soundHit.play() //Play collision SFX
         }
     },1000);
 }
@@ -507,11 +506,11 @@ function timer(delay, ball, batton) {
 var timerstarted = 0; //Has countdown started
 var timervalue = 0; //Countdown value
 
-var game_startable = true; //Can the game be started? (After gameover, all keys must be released for this to be 1)
+var game_startable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
 function update(ball, batton) { 
 
-    if (!gamestart) { //If game hasn't started
+    if (!gameStart) { //If game hasn't started
 
         // Updated ball resting position (in case of canvas resize)
         ball.position.x = x0; //Reset x
@@ -522,7 +521,7 @@ function update(ball, batton) {
             game_startable = true; //Make game startable once all keys have been let go of
         }
 
-        if (game_startable && (enter_keyid in keysDown || left_keyid in keysDown || right_keyid in keysDown)) { // If game is startable AND any key is pressed
+        if (game_startable && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game is startable AND any key is pressed
             if (!timerstarted){ // If timer hasn't already started
                 console.log("STARTING TIMER")
                 timerstarted = true; //Flag timer as started
@@ -533,7 +532,7 @@ function update(ball, batton) {
     }
     
     else {  // If game has started
-        if (gameover) { //If game has started AND gameover
+        if (gameOver) { //If game has started AND gameOver
             ball.position.x = x0; //Reset x
             ball.position.y = y0; //Reset y
             
@@ -544,18 +543,18 @@ function update(ball, batton) {
 
             keysDown = {}; //Clear keys down
 
-            gamestart = false; //Stop game
+            gameStart = false; //Stop game
             game_startable = false; //Lock game out of starting
 
-            if (hits>topscore){ //If score beats current best
-                topscore = hits; //Update topscore
+            if (hits>topScore){ //If score beats current best
+                topScore = hits; //Update topScore
             }
             
         }
-        else {  //If game has started AND NOT gameover
+        else {  //If game has started AND NOT gameOver
             // DEATH MODE
             if (20 <= level && level <= 30) { // If between levels 20 and 30
-                s = deathpaddle(level, 0.01, 0.4);
+                s = deathPaddle(level, 0.01, 0.4);
             }
 
             //BATTON MOTION
@@ -570,7 +569,7 @@ function update(ball, batton) {
 function draw(ball, batton) { //DRAW FRAME
 
     //Title
-    if (!gamestart) { //If game hasn't started
+    if (!gameStart) { //If game hasn't started
 
         ctx.fillStyle = "#ffffff";
 
@@ -579,7 +578,7 @@ function draw(ball, batton) { //DRAW FRAME
             ctx.textAlign="center"; 
             ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
 
-            if (!gameover) {
+            if (!gameOver) {
                 ctx.font = "normal 52px monospace";
                 ctx.fillText("MONOPONG", x0, y0-80);
             }
@@ -593,7 +592,7 @@ function draw(ball, batton) { //DRAW FRAME
     }
 
     //Gameover screen
-    if (gameover && !timerstarted) {
+    if (gameOver && !timerstarted) {
         ctx.font = "normal 42px monospace";
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.font = "normal 22px monospace";
@@ -602,10 +601,10 @@ function draw(ball, batton) { //DRAW FRAME
 
     
     //Ring
-    if (gameover && !timerstarted) { //If gameover and timer not started
+    if (gameOver && !timerstarted) { //If gameOver and timer not started
         ring_colour = '#FF0000';
     }
-    else if (timerstarted || (!gameover && !gamestart)) { //If timer started, or not gameover but game not started (ie first run)
+    else if (timerstarted || (!gameOver && !gameStart)) { //If timer started, or not gameOver but game not started (ie first run)
         ring_colour = '#bc7a00';
     }
     else { //If game is running
@@ -644,7 +643,7 @@ function draw(ball, batton) { //DRAW FRAME
     ctx.textAlign="left"; 
     ctx.fillText("Level: " + level, 50, 50);
     ctx.fillText("Hits: " + hits, 50, 100);
-    ctx.fillText("Highscore: " + topscore, 50, 150);
+    ctx.fillText("Highscore: " + topScore, 50, 150);
 }
 
 function queue() { //GET NEW FRAME
