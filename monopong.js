@@ -585,9 +585,10 @@ function update(ball, batton) {
 
     if (!gameStarted) { //If game hasn't started
 
-        // Updated ball resting position (in case of canvas resize)
-        ball.position.x = x0; //Reset x
-        ball.position.y = y0; //Reset y
+        if (!gameOver){ //If not on gameovger screen, keep recalculating ball center position
+            ball.position.x = x0; //Reset x
+            ball.position.y = y0; //Reset y
+        }
 
         if (!gameStartable && isEmpty(keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
             console.log("Making game startable")
@@ -595,8 +596,17 @@ function update(ball, batton) {
         }
 
         if (gameStartable && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game is startable AND any key is pressed
+            
+            //Reset game
+            ball.position.x = x0; //Reset x
+            ball.position.y = y0; //Reset y
+
+            hits = 0; //Reset score
+
+            battonMain.angle=0.5*Math.PI; //Reset Batton
+
+            //Start timer
             if (!startTimerActive){ // If startTimer hasn't already started
-                hits = 0; //Reset score
                 startTimer(3, 1000, ball, batton) //Start startTimer
             }
         }
@@ -604,16 +614,15 @@ function update(ball, batton) {
     
     else {  // If game has started
         if (gameOver) { //If gameOver
-            ball.position.x = x0; //Reset x
-            ball.position.y = y0; //Reset y
-            
+
+            //Stop ball motion
             ball.velocity.x = 0; //Reset vx
             ball.velocity.y = 0; //Reset vy
-            
-            battonMain.angle=0.5*Math.PI; //Reset Batton
 
-            keysDown = {}; //Clear keys down
+            //Clear keys down
+            keysDown = {}; 
 
+            //Clear flags
             gameStarted = false; //Stop game
             gameStartable = false; //Lock game out of starting
 
@@ -663,7 +672,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = "normal 52px monospace";
                 ctx.fillText("MONOPONG", x0, y0-80);
                 ctx.font = "normal 22px monospace";
-                ctx.fillText("beta 4", x0, y0-50);
+                ctx.fillText("beta 4b", x0, y0-50);
             }
         }
         else {
