@@ -664,13 +664,18 @@ function draw(ball, batton) { //DRAW FRAME
         ctx.fillStyle = "#ffffff";
 
         if (!startTimerActive) { //If countdown hasn't started
-            ctx.font = "normal 22px monospace";
             ctx.textAlign="center"; 
+
+            ctx.font = "normal 24px monospace";
             ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
+
+            ctx.font = "normal 18px monospace";
+            ctx.fillText("TOUCH LEFT/RIGHT OF DISPLAY", x0, y0+95);
+            ctx.fillText("OR USE LEFT/RIGHT KEYS TO MOVE", x0, y0+115);
 
             if (!gameOver) {
                 ctx.font = "normal 52px monospace";
-                ctx.fillText("MONOPONG", x0, y0-80);
+                ctx.fillText("MONOPONG", x0, y0-85);
                 ctx.font = "normal 22px monospace";
                 ctx.fillText("beta 4b", x0, y0-50);
             }
