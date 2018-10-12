@@ -3,7 +3,7 @@
     "short_name": "Monopong",
     "lang": "en-GB",
     "start_url": "/",
-    "display": "standalone",
+    "display": "fullscreen",
     "background_color": "#202020",
     "theme_color": "#202020",
     "icons": [
