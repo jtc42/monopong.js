@@ -357,10 +357,20 @@ function Ball(position, velocity, size, batton) {
 function testCollision(ball, batton) {
     //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
-    var angleTest = ball.positionAngle > batton.angle-0.5*batton.size && ball.positionAngle < batton.angle+0.5*batton.size;
-    var radiusTest = ball.positionRadius >= R - ball.size;
+    var battonLeft = batton.angle + 0.5*batton.size;
+    var battonRight = batton.angle - 0.5*batton.size;
 
-    console.log(ball.positionAngle, batton.angle-0.5*batton.size, batton.angle+0.5*batton.size)
+    if (battonLeft > Math.PI) { //If left of batton is over the pi-line
+        var angleTest = (-Math.PI < ball.positionAngle && ball.positionAngle < battonLeft - 2*Math.PI) || (battonRight < ball.positionAngle && ball.positionAngle < Math.PI)
+    }
+    else if (battonRight < -Math.PI) { //If right of batton is under the pi-line
+        var angleTest = (-Math.PI < ball.positionAngle && ball.positionAngle < battonLeft) || (battonRight + 2*Math.PI < ball.positionAngle && ball.positionAngle < Math.PI)
+    }
+    else { //If away from the pi-line
+        var angleTest = battonRight < ball.positionAngle && ball.positionAngle < battonLeft;
+    }
+
+    var radiusTest = ball.positionRadius >= R - ball.size;
 
     if (!godMode){ //If not in god mode
         return (angleTest && radiusTest);
