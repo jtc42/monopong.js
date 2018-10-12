@@ -71,8 +71,9 @@ function resizeCanvas() {
 //DEFINITIONS
 var speedScale = 1;  //Animation scalar
 
-var gameStart = false; //Game active
+var gameStarted = false; //Game active
 var gameOver = false; //Has gameOver occured
+var gamePaused = false; //Game is paused
 
 var hits = 0; //Hit count
 var level = 0; //Iterates every 10 hits
@@ -110,6 +111,7 @@ if (document.addEventListener) {
 var leftKeyID = 37;
 var rightKeyID = 39;
 var enterKeyID = 13;
+var escKeyID = 27;
 
 var keysDown = {}; //Array of keys down
 
@@ -401,7 +403,7 @@ function bounds(ball) {
     //If not within outer circle boundary
     if (ball.positionRadius > R + (1.5*speedScale*ball.velocityRadius)) { 
         soundMiss.play() //Play collision SFX
-        if (gameStart = true) {
+        if (gameStarted = true) {
             gameOver = true; //Flag gameOver
         }
         return false
@@ -483,6 +485,12 @@ function loop(now) {
     
     //Set speedScale by FPS and level increments
     speedScale = fpsScale * difficulty(level, 3.8, 0.18);
+
+    //Check focus
+    if (gameStarted && !gamePaused && (!document.hasFocus() || escKeyID in keysDown)) { //If started, not paused, and (not in focus or escape pressed)
+        soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game pausing)
+        gamePaused = true; 
+    }
 }
 
 //CLEAR CANVAS ON EVERY FRAME
@@ -493,40 +501,71 @@ function clear() {
 //STARTS GAME
 function startgame(ball) {
     ball.velocity = new Vector(0.0, -0.024*R); //Give ball an initial velocity
-    gameStart = 1; //Set game as started
+    gameStarted = 1; //Set game as started
     gameOver = 0; //Clear gameOver flag
-    soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 }
 
 //START GAME TIMER
-function timer(delay, ball, batton) {
-    timerValue = delay;
+function startTimer(delay, step, ball, batton) {
+    startTimerValue = delay;
     soundHit.play() //Play collision SFX
 
+    console.log("STARTING TIMER")
+    startTimerActive = true; //Flag startTimer as started
+
     var startTimer = setInterval(function(){
-        timerValue--;
-        if(timerValue <= 0) { //If at zero
-            console.log("DONE")
-            timerStarted = false; //Stop timer
+        startTimerValue--;
+        if(startTimerValue <= 0) { //If at zero
+            startTimerActive = false; //Stop startTimer
+            soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+
             startgame(ball, batton)
-            console.log("CLEAR")
+            console.log("PLAY")
             clearInterval(startTimer);
         }
         else { //If not zero
-            console.log(timerValue)
+            console.log(startTimerValue)
             soundHit.play() //Play collision SFX
         }
-    },1000);
+    }, step);
 }
 
-var timerStarted = false; //Has countdown started
-var timerValue = 0; //Countdown value
+var startTimerActive = false; //Has countdown started
+var startTimerValue = 0; //Countdown value
+
+//UNPAUSE TIMER
+function pauseTimer(delay, step) {
+    pauseTimerValue = delay;
+    soundHit.play() //Play collision SFX
+
+    console.log("STARTING UNPAUSE TIMER")
+    pauseTimerActive = true; //Flag startTimer as started
+
+    var pauseTimer = setInterval(function(){
+        pauseTimerValue--;
+        if(pauseTimerValue <= 0) { //If at zero
+            pauseTimerActive = false; //Stop pauseTimer
+            soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+
+            gamePaused = false; //Unpause
+            console.log("PLAY")
+            clearInterval(pauseTimer);
+        }
+        else { //If not zero
+            console.log(pauseTimerValue)
+            soundHit.play() //Play collision SFX
+        }
+    }, step);
+}
+
+var pauseTimerActive = false; //Has countdown started
+var pauseTimerValue = 0; //Countdown value
 
 var gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
 function update(ball, batton) { 
 
-    if (!gameStart) { //If game hasn't started
+    if (!gameStarted) { //If game hasn't started
 
         // Updated ball resting position (in case of canvas resize)
         ball.position.x = x0; //Reset x
@@ -538,17 +577,15 @@ function update(ball, batton) {
         }
 
         if (gameStartable && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game is startable AND any key is pressed
-            if (!timerStarted){ // If timer hasn't already started
-                console.log("STARTING TIMER")
-                timerStarted = true; //Flag timer as started
+            if (!startTimerActive){ // If startTimer hasn't already started
                 hits = 0; //Reset score
-                timer(3, ball, batton) //Start timer
+                startTimer(3, 1000, ball, batton) //Start startTimer
             }
         }
     }
     
     else {  // If game has started
-        if (gameOver) { //If game has started AND gameOver
+        if (gameOver) { //If gameOver
             ball.position.x = x0; //Reset x
             ball.position.y = y0; //Reset y
             
@@ -559,7 +596,7 @@ function update(ball, batton) {
 
             keysDown = {}; //Clear keys down
 
-            gameStart = false; //Stop game
+            gameStarted = false; //Stop game
             gameStartable = false; //Lock game out of starting
 
             if (hits>topScore){ //If score beats current best
@@ -567,17 +604,27 @@ function update(ball, batton) {
             }
             
         }
-        else {  //If game has started AND NOT gameOver
+
+        else if (gamePaused) {
+            if (gameStarted && (enterKeyID in keysDown || leftKeyID in keysDown || rightKeyID in keysDown)) { // If game has started AND any key is pressed 
+                if (!pauseTimerActive){
+                    console.log("STARTING UNPAUSE TIMER")
+                    pauseTimer(3, 500) //Start startTimer
+                }
+            }
+        }
+
+        else {  //If not gameover, and not paused
+
             // DEATH MODE
             if (20 <= level && level <= 30) { // If between levels 20 and 30
                 batton.size = deathPaddle(level, 0.01, 0.4);
             }
 
             //BATTON MOTION
-            batton.move(); //Move batton
-            
+            batton.move();
             //BALL MOTION
-            ball.move(); //Move ball
+            ball.move();
         }
     }
 }
@@ -585,11 +632,11 @@ function update(ball, batton) {
 function draw(ball, batton) { //DRAW FRAME
 
     //Title
-    if (!gameStart) { //If game hasn't started
+    if (!gameStarted) { //If game hasn't started
 
         ctx.fillStyle = "#ffffff";
 
-        if (!timerStarted) { //If countdown hasn't started
+        if (!startTimerActive) { //If countdown hasn't started
             ctx.font = "normal 22px monospace";
             ctx.textAlign="center"; 
             ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
@@ -598,31 +645,49 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = "normal 52px monospace";
                 ctx.fillText("MONOPONG", x0, y0-80);
                 ctx.font = "normal 22px monospace";
-                ctx.fillText("beta 3b", x0, y0-50);
+                ctx.fillText("beta 3c", x0, y0-50);
             }
         }
         else {
             ctx.font = "normal 52px monospace";
-
             ctx.textAlign="center"; 
-            ctx.fillText(timerValue, x0, y0-80);
+            ctx.fillText(startTimerValue, x0, y0-80);
         }
     }
 
     //Gameover screen
-    if (gameOver && !timerStarted) {
+    if (gameOver && !startTimerActive) {
         ctx.font = "normal 42px monospace";
         ctx.fillText("GAME OVER", x0, y0-80);
         ctx.font = "normal 22px monospace";
         ctx.fillText("SCORE: " + hits, x0, y0-50);
     }
 
+    //Pause screen
+    if (gamePaused) {
+        ctx.font = "normal 22px monospace";
+        ctx.textAlign="center"; 
+        ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
+
+        if (pauseTimerActive) { //If unpause timer has started
+            ctx.font = "normal 52px monospace";
+            ctx.textAlign="center"; 
+            ctx.fillText(pauseTimerValue, x0, y0-80);
+        }
+        else { //If paused, and unpause timer not started
+            ctx.font = "normal 42px monospace";
+            ctx.fillText("PAUSED", x0, y0-80);
+        }
+    }
     
     //Ring
-    if (gameOver && !timerStarted) { //If gameOver and timer not started
+    if (gameOver && !startTimerActive) { //If gameOver and startTimer not started
         ringColour = '#FF0000';
     }
-    else if (timerStarted || (!gameOver && !gameStart)) { //If timer started, or not gameOver but game not started (ie first run)
+    else if (gamePaused && !pauseTimerActive){
+        ringColour = '#FFFFFF';
+    }
+    else if (startTimerActive || pauseTimerActive || (!gameOver && !gameStarted)) { //If any timer started, or not gameOver but game not started (ie first run)
         ringColour = '#bc7a00';
     }
     else { //If game is running
