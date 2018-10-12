@@ -202,7 +202,7 @@ function difficulty(t, a, b) { //Sigmoidal difficulty curve
 }
 
 function deathPaddle(t, a, b) { //Value of s for linearly decreasing paddle size in death mode
-    return Math.PI*(-a*t + b);
+    return Math.PI*(-a*(t-10) + b);
 }
 
 function square(x) { //Square a value
@@ -418,16 +418,19 @@ function collisions(ball, batton) {
 
     if (testCollision(ball, batton)) { //If ball has colided with batton, or godMode is on
 
-        if ((absolute(Math.cos(ball.velocityAngle + ball.positionAngle))) > 0.5){ //For steep angles
+        if ((hits+1) % 10 == 0) { //If going up a level
+            soundShallow.play() //Play shallow collision SFX
+        }
+        else {
             soundHit.play() //Play collision SFX
+        }
 
+        if ((absolute(Math.cos(ball.velocityAngle + ball.positionAngle))) > 0.5){ //For steep angles
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
             ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - batton.angularVelocity*0.3*cube(absolute(Math.cos(ball.velocityAngle+ball.positionAngle))) +(Math.random()-0.5)*0.2*Math.PI; 
         } 
                         
         else { //For shallow angles
-            soundShallow.play() //Play shallow collision SFX
-
             if (absolute(ball.positionAngle) > 0.6*Math.PI){ //For left half
                 //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
                 ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - (ball.velocityAngle/absolute(ball.velocityAngle))*(Math.random()*0.5*Math.PI +0.3);
@@ -484,7 +487,7 @@ function loop(now) {
     level = Math.round((hits+5)/10);
     
     //Set speedScale by FPS and level increments
-    speedScale = fpsScale * difficulty(level, 3.8, 0.18);
+    speedScale = fpsScale * difficulty(level, 2.6, 0.20);
 
     //Check focus
     if (gameStarted && !gamePaused && (!document.hasFocus() || escKeyID in keysDown)) { //If started, not paused, and (not in focus or escape pressed)
@@ -517,7 +520,7 @@ function startTimer(delay, step, ball, batton) {
         startTimerValue--;
         if(startTimerValue <= 0) { //If at zero
             startTimerActive = false; //Stop startTimer
-            soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+            soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 
             startgame(ball, batton)
             console.log("PLAY")
@@ -545,7 +548,7 @@ function pauseTimer(delay, step) {
         pauseTimerValue--;
         if(pauseTimerValue <= 0) { //If at zero
             pauseTimerActive = false; //Stop pauseTimer
-            soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+            soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 
             gamePaused = false; //Unpause
             console.log("PLAY")
@@ -563,6 +566,21 @@ var pauseTimerValue = 0; //Countdown value
 
 var gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
+// Logical test for death modes
+function stage(stage) {
+    return (10*stage < level && level <= 10*(stage+1))
+}
+
+function stageBelow(stage) {
+    return (level <= 10*(stage))
+}
+
+function stageAbove(stage) {
+    return (10*stage < level)
+}
+
+
+//Update objects
 function update(ball, batton) { 
 
     if (!gameStarted) { //If game hasn't started
@@ -617,7 +635,7 @@ function update(ball, batton) {
         else {  //If not gameover, and not paused
 
             // DEATH MODE
-            if (20 <= level && level <= 30) { // If between levels 20 and 30
+            if (stage(3)) { // If in stage 2
                 batton.size = deathPaddle(level, 0.01, 0.4);
             }
 
@@ -645,7 +663,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = "normal 52px monospace";
                 ctx.fillText("MONOPONG", x0, y0-80);
                 ctx.font = "normal 22px monospace";
-                ctx.fillText("beta 3c", x0, y0-50);
+                ctx.fillText("beta 4", x0, y0-50);
             }
         }
         else {
@@ -691,21 +709,31 @@ function draw(ball, batton) { //DRAW FRAME
         ringColour = '#bc7a00';
     }
     else { //If game is running
-        ringColour = '#00bca6';
+        if (stage(0)) {
+            ringColour = '#00bca6';
+        }
+        else {
+            ringColour = '#606060';
+        }
+    }
+    
+    // Draw ring if in stage 0
+    if (stage(0)) {
+        ctx.beginPath();
+        ctx.arc(x0,y0,R,0,2*Math.PI);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = ringColour;
+        ctx.stroke();
     }
 
-    ctx.beginPath();
-    ctx.arc(x0,y0,R,0,2*Math.PI);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = ringColour;
-    ctx.stroke();
-    
-    //Batton decoration
-    ctx.beginPath();
-    ctx.arc(x0, y0, R+2, batton.angle-batton.size, batton.angle+batton.size);
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = ringColour;
-    ctx.stroke();
+    //Draw batton decoration below stage 2
+    if (stageBelow(2)) {
+        ctx.beginPath();
+        ctx.arc(x0, y0, R+2, batton.angle-1.5*batton.size, batton.angle+1.5*batton.size);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = ringColour;
+        ctx.stroke();
+    }
 
     //Batton
     ctx.beginPath();
