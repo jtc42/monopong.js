@@ -727,7 +727,7 @@ function draw(ball, batton) { //DRAW FRAME
             ringColour = '#00bca6';
         }
         else {
-            ringColour = '#606060';
+            ringColour = '#505050';
         }
     }
     
