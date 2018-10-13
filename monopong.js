@@ -686,7 +686,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 4d", x0, y0-(0.14*R));
+                ctx.fillText("beta 4e", x0, y0-(0.14*R));
             }
         }
         else {
