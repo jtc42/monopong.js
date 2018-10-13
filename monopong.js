@@ -677,7 +677,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = "normal 52px monospace";
                 ctx.fillText("MONOPONG", x0, y0-85);
                 ctx.font = "normal 22px monospace";
-                ctx.fillText("beta 4c", x0, y0-50);
+                ctx.fillText("beta 4d", x0, y0-50);
             }
         }
         else {
