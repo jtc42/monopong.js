@@ -340,14 +340,14 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
 
 //BALL
 //Define ball as an object, reading position and velocity vectors
-function Ball(position, velocity, size, batton) {
+function Ball(position, velocity, batton) {
     this.position = position || new Vector(x0,y0); //Set ball.position to given vector, or default to centre
     this.velocity = velocity || new Vector(0,0); //Set ball.velocity to given vector, or default to zero
     
     this.positionRadius = 0; //Initial position radius
     this.positionAngle = 0; //Initial position angle
 
-    this.size = size; //Ball size radius
+    this.size = 0.032*R; //Ball size radius
     
     this.velocityRadius = 0; //Initial velocity magnitude
     this.velocityAngle = 0; //Initial velocity angle
@@ -469,7 +469,7 @@ function calculateFps(now) {
 
 // Create objects for game
 var battonMain = new Batton(R, 0.5*Math.PI); // Make a new batton at top of circle
-var ballMain = new Ball(Vector(x0, y0), Vector(0,0), 0.032*R, battonMain) // New ball
+var ballMain = new Ball(Vector(x0, y0), Vector(0,0), battonMain) // New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
@@ -658,6 +658,15 @@ function update(ball, batton) {
 
 function draw(ball, batton) { //DRAW FRAME
 
+    //Calculate text sizes
+    fontTitle = "normal " + 0.20*R + "px monospace";
+    fontBig = "normal " + 0.15*R + "px monospace";
+    fontMedium = "normal " + 0.08*R + "px monospace";
+    fontSmall = "normal " + 0.07*R + "px monospace";
+
+    //Recalculate ball size
+    ball.size = 0.032*R;
+
     //Title
     if (!gameStarted) { //If game hasn't started
 
@@ -666,48 +675,51 @@ function draw(ball, batton) { //DRAW FRAME
         if (!startTimerActive) { //If countdown hasn't started
             ctx.textAlign="center"; 
 
-            ctx.font = "normal 24px monospace";
-            ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
+            ctx.font = fontMedium;
+            ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
 
             if (!gameOver) {
-                ctx.font = "normal 18px monospace";
-                ctx.fillText("TOUCH LEFT/RIGHT OF DISPLAY", x0, y0+95);
-                ctx.fillText("OR USE LEFT/RIGHT KEYS TO MOVE", x0, y0+115);
+                ctx.font = fontSmall;
+                ctx.fillText("TOUCH LEFT/RIGHT OF DISPLAY", x0, y0+(0.30*R));
+                ctx.fillText("OR USE LEFT/RIGHT KEYS TO MOVE", x0, y0+(0.38*R));
 
-                ctx.font = "normal 52px monospace";
-                ctx.fillText("MONOPONG", x0, y0-85);
-                ctx.font = "normal 22px monospace";
-                ctx.fillText("beta 4d", x0, y0-50);
+                ctx.font = fontTitle;
+                ctx.fillText("MONOPONG", x0, y0-(0.28*R));
+                ctx.font = fontMedium;
+                ctx.fillText("beta 4d", x0, y0-(0.14*R));
             }
         }
         else {
-            ctx.font = "normal 52px monospace";
+            ctx.font = fontTitle;
             ctx.textAlign="center"; 
-            ctx.fillText(startTimerValue, x0, y0-80);
+            ctx.fillText(startTimerValue, x0, y0-(0.28*R));
         }
     }
 
     //Gameover screen
     if (gameOver && !startTimerActive) {
-        ctx.font = "normal 42px monospace";
+        ctx.font = fontBig;
         ctx.fillText("GAME OVER", x0, y0-80);
-        ctx.font = "normal 22px monospace";
+
+        ctx.font = fontMedium;
         ctx.fillText("SCORE: " + hits, x0, y0-50);
     }
 
     //Pause screen
     if (gamePaused) {
-        ctx.font = "normal 22px monospace";
         ctx.textAlign="center"; 
+
+        ctx.font = fontMedium;
         ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
 
         if (pauseTimerActive) { //If unpause timer has started
-            ctx.font = "normal 52px monospace";
             ctx.textAlign="center"; 
+
+            ctx.font = fontTitle;
             ctx.fillText(pauseTimerValue, x0, y0-80);
         }
         else { //If paused, and unpause timer not started
-            ctx.font = "normal 42px monospace";
+            ctx.font = fontBig;
             ctx.fillText("PAUSED", x0, y0-80);
         }
     }
@@ -763,12 +775,12 @@ function draw(ball, batton) { //DRAW FRAME
     ctx.fill();
     
     //Score
-    ctx.font = "normal 18px monospace";
+    ctx.font = fontSmall;
     ctx.fillStyle = "#ffffff";
     ctx.textAlign="left"; 
-    ctx.fillText("Level: " + level, 50, 50);
-    ctx.fillText("Hits: " + hits, 50, 100);
-    ctx.fillText("Highscore: " + topScore, 50, 150);
+    ctx.fillText("Level: " + level, (0.18*R), (0.18*R));
+    ctx.fillText("Hits: " + hits, (0.18*R), (0.30*R));
+    ctx.fillText("Highscore: " + topScore, (0.18*R), (0.42*R));
 }
 
 function queue() { //GET NEW FRAME
