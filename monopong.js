@@ -760,6 +760,23 @@ function draw(ball, batton) { //DRAW FRAME
         ctx.stroke();
     }
 
+    //Velocity indicator
+    if (gamePaused) {
+        ctx.globalAlpha=0.3;
+        ctx.beginPath();
+        ctx.fillStyle = '#ffffff';
+        ctx.arc(ball.position.x - 3*ball.velocity.x, ball.position.y - 3*ball.velocity.y, ball.size, 0, 2*Math.PI, false);
+        ctx.fill();
+
+        ctx.globalAlpha=0.1;
+        ctx.beginPath();
+        ctx.fillStyle = '#ffffff';
+        ctx.arc(ball.position.x - 6*ball.velocity.x, ball.position.y - 6*ball.velocity.y, ball.size, 0, 2*Math.PI, false);
+        ctx.fill();
+
+        ctx.globalAlpha=1.0;
+    }
+
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
@@ -792,7 +809,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 6c", x0, y0-(0.14*R));
+                ctx.fillText("beta 6d", x0, y0-(0.14*R));
             }
         }
         else {
