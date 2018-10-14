@@ -1,4 +1,4 @@
-var CACHE_NAME = 'MONOPONG-CACHE-B06B';
+var CACHE_NAME = 'MONOPONG-CACHE-B06C';
 var appShellFiles = [
   '/',
   '/index.html',

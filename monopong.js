@@ -37,7 +37,7 @@ ctx.scale(scale, scale);
 
 // Canvas-scaled dimensions
 var smallerDim = Math.min(viewWidth, viewHeight);
-var R = smallerDim /2.4;  //Circle Radius
+var R = smallerDim / 2.3;  //Circle Radius
 
 var x0 = 0.5*viewWidth;  //Centre x
 var y0 = 0.5*viewHeight;  //Centre y
@@ -87,7 +87,7 @@ function resizeCanvas() {
 
     // Canvas-scaled dimensions
     smallerDim = Math.min(viewWidth, viewHeight);
-    R = smallerDim /2.4;  //Circle Radius
+    R = smallerDim / 2.3;  //Circle Radius
 
     x0 = 0.5*viewWidth;  //Centre x
     y0 = 0.5*viewHeight;  //Centre y
@@ -718,7 +718,7 @@ function draw(ball, batton) { //DRAW FRAME
     fontTitle = "normal " + 0.20*R + "px monospace";
     fontBig = "normal " + 0.15*R + "px monospace";
     fontMedium = "normal " + 0.08*R + "px monospace";
-    fontSmall = "normal " + 0.07*R + "px monospace";
+    fontSmall = "normal " + 0.062*R + "px monospace";
 
     //Recalculate ball size
     ball.size = 0.032*R;
@@ -792,7 +792,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 6b", x0, y0-(0.14*R));
+                ctx.fillText("beta 6c", x0, y0-(0.14*R));
             }
         }
         else {

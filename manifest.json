@@ -4,7 +4,6 @@
     "lang": "en-GB",
     "start_url": "/",
     "display": "fullscreen",
-    "orientation":  "landscape",
     "background_color": "#202020",
     "theme_color": "#202020",
     "icons": [
