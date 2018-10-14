@@ -297,37 +297,44 @@ function Batton(r, t) {
     this.radius = r; //Add radius as a function of a batton object
     this.angle = t; //Add angle as a function of a batton object
 
-    this.angularVelocity = 0; //Initial angular velocity
+    this.direction = 0; //Initial angular velocity
+
+    this.lastKey = 0;
+
     this.size = 0.2*Math.PI;
 }
 
 //Batton Move
 Batton.prototype.move = function() { //Add move as a function unique to each batton
     
-    this.angularVelocity = 0; //Reset angular velocity to zero
-    
-    //KEYBOARD CONTROL (Tidy up, shift condition once that adds a scalar to left and right)
-    if (leftKeyID in keysDown) { // Left down
-        if (16 in keysDown) { //Shift down
-            this.angle+=speedScale*0.04*Math.PI; //Add double angle
-            this.angularVelocity = 2; //Set double angularVelocity
-        }
-        else { //Shift not down
-            this.angle+=speedScale*0.02*Math.PI; //Add single angle
-            this.angularVelocity = 1; //Set single angularVelocity
-        }
+    if (this.direction != 1 && leftKeyID in keysDown && !(rightKeyID in keysDown)) { // Left only down
+        this.direction = 1;
+        this.lastKey = 1;
     }
     
-    if (rightKeyID in keysDown) { // Right down
-        if (16 in keysDown) { //Shift down
-            this.angle-=speedScale*0.04*Math.PI; //Add double angle
-            this.angularVelocity = -2; //Set double angularVelocity
-                }
-        else {//Shift not down
-            this.angle-=speedScale*0.02*Math.PI; //Add single angle
-            this.angularVelocity = -1; //Set single angularVelocity
-            }
+    else if (this.direction != -1 && rightKeyID in keysDown && !(leftKeyID in keysDown)) { // Right only down
+        this.direction = -1;
+        this.lastKey = -1;
     }
+
+    else if (rightKeyID in keysDown && leftKeyID in keysDown) { // Both directions down
+        if (this.lastKey == 1) { //If left was started first
+            this.direction = -1; //Move right
+        }
+        else if (this.lastKey == -1) { //If right was started first
+            this.direction = 1; //Move left
+        }
+        else { //If left and right were somehow pressed at the exact same time
+            this.direction = 0;
+        }
+    }
+    else { //No directions down
+        this.direction = 0;
+        this.lastKey = 0;
+    }
+
+    this.angle += this.direction * speedScale*0.02*Math.PI; //Add angular velocity to angle
+    this.direction = 2; //Set double direction
     
     //Fold the user-controlled angle into -pi to pi, to match the angle-space of the ball
     this.angle = foldAngle(this.angle);
@@ -393,8 +400,8 @@ Ball.prototype.move = function () {
 
     //Update position
     if (bounds(this)) {
-        this.position.x+=speedScale*this.velocity.x;
-        this.position.y+=speedScale*this.velocity.y;
+        this.position.x += speedScale*this.velocity.x;
+        this.position.y += speedScale*this.velocity.y;
     }
 };
 
@@ -427,7 +434,7 @@ function collisions(ball, batton) {
 
         if ((absolute(Math.cos(ball.velocityAngle + ball.positionAngle))) > 0.5){ //For steep angles
             //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-            ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - batton.angularVelocity*0.3*cube(absolute(Math.cos(ball.velocityAngle+ball.positionAngle))) +(Math.random()-0.5)*0.2*Math.PI; 
+            ball.velocityAngle = Math.PI - ball.velocityAngle - 2*ball.positionAngle - batton.direction*0.3*cube(absolute(Math.cos(ball.velocityAngle+ball.positionAngle))) +(Math.random()-0.5)*0.2*Math.PI; 
         } 
                         
         else { //For shallow angles
@@ -473,6 +480,7 @@ var ballMain = new Ball(Vector(x0, y0), Vector(0,0), battonMain) // New ball
 
 //ANIMATION SEQUENCE
 function loop(now) {
+
     //Run main loop
     clear();
     update(ballMain, battonMain); //Update all positions
@@ -686,7 +694,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 4e", x0, y0-(0.14*R));
+                ctx.fillText("beta 5", x0, y0-(0.14*R));
             }
         }
         else {
