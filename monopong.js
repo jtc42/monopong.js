@@ -694,9 +694,16 @@ function update(ball, batton) {
             ball.move();
         }
 
-        //TODO: Fix velocity not rescaling when ball is moving. Possibly because velocityRadius isn't scaling properly
+        //Rescale position and velocity if canvas dimensions change
         ball.normaliseVelocity();
         ball.normalisePosition();
+        /*
+        I'll be real here, the velocity rescaling works a treat if the game is paused when the resizing happens,
+        but for some reason, and I've no idea why, it doesn't work at all if you rescale while the game is active.
+        As a hacky solution that superficially looks like a feature, the resizeCanvas function, which gets
+        called any time the window is resized, also pauses the game automatically. This is genuinely useful on 
+        mobile, as screen rotation pauses the game, but that's a side effect of debugging laziness.
+        */
         
     }
 }
@@ -792,7 +799,7 @@ function draw(ball, batton) { //DRAW FRAME
     if (stage(0)) {
         ctx.beginPath();
         ctx.arc(x0,y0,R,0,2*Math.PI);
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 0.01*R;
         ctx.strokeStyle = ringColour;
         ctx.stroke();
     }
@@ -800,16 +807,18 @@ function draw(ball, batton) { //DRAW FRAME
     //Draw batton decoration below stage 2
     if (stageBelow(2)) {
         ctx.beginPath();
-        ctx.arc(x0, y0, R+2, batton.angle-1.5*batton.size, batton.angle+1.5*batton.size);
-        ctx.lineWidth = 6;
+        ctx.arc(x0, y0, 1.012*R, batton.angle-1.5*batton.size, batton.angle+1.5*batton.size);
+        ctx.lineWidth = 0.025*R;
         ctx.strokeStyle = ringColour;
         ctx.stroke();
     }
 
     //Batton
     ctx.beginPath();
-    ctx.arc(x0, y0, R+4, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
-    ctx.lineWidth = 10;
+    //ctx.arc(x0, y0, R+4, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
+    ctx.arc(x0, y0, 1.015*R, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
+    //ctx.lineWidth = 10;
+    ctx.lineWidth = 0.035*R;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
 
