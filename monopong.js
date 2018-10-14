@@ -314,6 +314,9 @@ function Batton(r, t) {
 
 //Batton Move
 Batton.prototype.move = function() { //Add move as a function unique to each batton
+
+    //Reset direction
+    this.direction = 0;
     
     if (this.direction != 1 && leftKeyID in keysDown && !(rightKeyID in keysDown)) { // Left only down
         this.direction = 1;
@@ -342,7 +345,6 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
     }
 
     this.angle += this.direction * speedScale*0.02*Math.PI; //Add angular velocity to angle
-    this.direction = 2; //Set double direction
     
     //Fold the user-controlled angle into -pi to pi, to match the angle-space of the ball
     this.angle = foldAngle(this.angle);
@@ -457,6 +459,8 @@ function bounds(ball) {
 function collisions(ball, batton) {
 
     if (testCollision(ball, batton)) { //If ball has colided with batton, or godMode is on
+
+        console.log(batton.direction)
 
         if ((hits+1) % 10 == 0) { //If going up a level
             soundShallow.play() //Play shallow collision SFX
@@ -788,7 +792,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 6", x0, y0-(0.14*R));
+                ctx.fillText("beta 6b", x0, y0-(0.14*R));
             }
         }
         else {
