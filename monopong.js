@@ -719,64 +719,7 @@ function draw(ball, batton) { //DRAW FRAME
     //Recalculate ball size
     ball.size = 0.032*R;
 
-    //Title
-    if (!gameStarted) { //If game hasn't started
-
-        ctx.fillStyle = "#ffffff";
-
-        if (!startTimerActive) { //If countdown hasn't started
-            ctx.textAlign="center"; 
-
-            ctx.font = fontMedium;
-            ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
-
-            if (!gameOver) {
-                ctx.font = fontSmall;
-                ctx.fillText("TOUCH LEFT/RIGHT OF DISPLAY", x0, y0+(0.30*R));
-                ctx.fillText("OR USE LEFT/RIGHT KEYS TO MOVE", x0, y0+(0.38*R));
-
-                ctx.font = fontTitle;
-                ctx.fillText("MONOPONG", x0, y0-(0.28*R));
-                ctx.font = fontMedium;
-                ctx.fillText("beta 5", x0, y0-(0.14*R));
-            }
-        }
-        else {
-            ctx.font = fontTitle;
-            ctx.textAlign="center"; 
-            ctx.fillText(startTimerValue, x0, y0-(0.28*R));
-        }
-    }
-
-    //Gameover screen
-    if (gameOver && !startTimerActive) {
-        ctx.font = fontBig;
-        ctx.fillText("GAME OVER", x0, y0-(0.28*R));
-
-        ctx.font = fontMedium;
-        ctx.fillText("SCORE: " + hits, x0, y0-(0.14*R));
-    }
-
-    //Pause screen
-    if (gamePaused) {
-        ctx.textAlign="center"; 
-
-        ctx.font = fontMedium;
-        ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
-
-        if (pauseTimerActive) { //If unpause timer has started
-            ctx.textAlign="center"; 
-
-            ctx.font = fontTitle;
-            ctx.fillText(pauseTimerValue, x0, y0-(0.28*R));
-        }
-        else { //If paused, and unpause timer not started
-            ctx.font = fontBig;
-            ctx.fillText("PAUSED", x0, y0-(0.28*R));
-        }
-    }
-    
-    //Ring
+    //Set ring colour
     if (gameOver && !startTimerActive) { //If gameOver and startTimer not started
         ringColour = '#FF0000';
     }
@@ -813,20 +756,75 @@ function draw(ball, batton) { //DRAW FRAME
         ctx.stroke();
     }
 
-    //Batton
-    ctx.beginPath();
-    //ctx.arc(x0, y0, R+4, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
-    ctx.arc(x0, y0, 1.015*R, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
-    //ctx.lineWidth = 10;
-    ctx.lineWidth = 0.035*R;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
     ctx.arc(ball.position.x, ball.position.y, ball.size, 0, 2*Math.PI, false);
     ctx.fill();
+    
+    //Batton
+    ctx.beginPath();
+    ctx.arc(x0, y0, 1.015*R, -batton.angle-0.5*batton.size, -batton.angle+0.5*batton.size);
+    ctx.lineWidth = 0.035*R;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    //Title
+    if (!gameStarted) { //If game hasn't started
+
+        ctx.fillStyle = "#ffffff";
+
+        if (!startTimerActive) { //If countdown hasn't started
+            ctx.textAlign="center"; 
+
+            ctx.font = fontMedium;
+            ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
+
+            if (!gameOver) {
+                ctx.font = fontSmall;
+                ctx.fillText("TOUCH LEFT/RIGHT OF DISPLAY", x0, y0+(0.30*R));
+                ctx.fillText("OR USE LEFT/RIGHT KEYS TO MOVE", x0, y0+(0.38*R));
+
+                ctx.font = fontTitle;
+                ctx.fillText("MONOPONG", x0, y0-(0.28*R));
+                ctx.font = fontMedium;
+                ctx.fillText("beta 6", x0, y0-(0.14*R));
+            }
+        }
+        else {
+            ctx.font = fontTitle;
+            ctx.textAlign="center"; 
+            ctx.fillText(startTimerValue, x0, y0-(0.28*R));
+        }
+    }
+
+    //Gameover screen
+    if (gameOver && !startTimerActive) {
+        ctx.font = fontBig;
+        ctx.fillText("GAME OVER", x0, y0-(0.28*R));
+
+        ctx.font = fontMedium;
+        ctx.fillText("SCORE: " + hits, x0, y0-(0.14*R));
+    }
+
+    //Pause screen
+    if (gamePaused) {
+        ctx.textAlign="center"; 
+
+        ctx.font = fontMedium;
+        ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
+
+        if (pauseTimerActive) { //If unpause timer has started
+            ctx.textAlign="center"; 
+
+            ctx.font = fontTitle;
+            ctx.fillText(pauseTimerValue, x0, y0-(0.28*R));
+        }
+        else { //If paused, and unpause timer not started
+            ctx.font = fontBig;
+            ctx.fillText("PAUSED", x0, y0-(0.28*R));
+        }
+    }
     
     //Score
     ctx.font = fontSmall;
