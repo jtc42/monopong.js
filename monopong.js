@@ -42,8 +42,33 @@ var R = smallerDim /2.4;  //Circle Radius
 var x0 = 0.5*viewWidth;  //Centre x
 var y0 = 0.5*viewHeight;  //Centre y
 
+//DEFINITIONS
+var speedScale = 1;  //Animation scalar
+
+var gameStarted = false; //Game active
+var gameOver = false; //Has gameOver occured
+var gamePaused = false; //Game is paused
+
+var hits = 0; //Hit count
+var level = 0; //Iterates every 10 hits
+var topScore = 0; //High score
+
+var godMode = false; //Never lose god mode
+
+
+//General pause function
+function pauseGame() {
+    soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game pausing)
+    gamePaused = true; 
+}
+
 //Function to recalculate all dimensions
 function resizeCanvas() {
+    //Pause game immediately
+    if (gameStarted && !gamePaused) {
+        pauseGame()
+    }
+
     //Update view sizes
     viewWidth = document.body.clientWidth;
     viewHeight = document.body.clientHeight;
@@ -68,25 +93,8 @@ function resizeCanvas() {
     y0 = 0.5*viewHeight;  //Centre y
 }
 
-//DEFINITIONS
-var speedScale = 1;  //Animation scalar
-
-var gameStarted = false; //Game active
-var gameOver = false; //Has gameOver occured
-var gamePaused = false; //Game is paused
-
-var hits = 0; //Hit count
-var level = 0; //Iterates every 10 hits
-var topScore = 0; //High score
-
-var godMode = false; //Never lose god mode
-
-
-
-
 // Handle resize events
 window.addEventListener('resize', resizeCanvas, false);
-
 
 //HANDLE CONTEXT MENU OVERRIDE
 if (document.addEventListener) {
@@ -237,18 +245,18 @@ Vector.prototype.add = function(vector) {
 
 
 //Position to Vector (accounts for relative to centre of circle)
-function GetX(r,t) { //Get x from R and angle
-    return r*Math.cos(t) +x0;
+function GetX(r, t) { //Get x from R and angle
+    return r*Math.cos(t) + x0;
 }
 
-function GetY(r,t) { //Get y from R and angle
-    return y0 -r*Math.sin(t);
+function GetY(r, t) { //Get y from R and angle
+    return y0 - r*Math.sin(t);
 }
 
-function GetVector(r,t) { //Combine GetX and GetY
-    var x = GetX(r,t);
-    var y = GetY(r,t);
-    return new Vector(x,y); //Set x and y values
+function GetVector(r, t) { //Combine GetX and GetY
+    var x = GetX(r, t);
+    var y = GetY(r, t);
+    return new Vector(x, y); //Set x and y values
 }
 
 
@@ -348,8 +356,13 @@ Batton.prototype.move = function() { //Add move as a function unique to each bat
 //BALL
 //Define ball as an object, reading position and velocity vectors
 function Ball(position, velocity, batton) {
-    this.position = position || new Vector(x0,y0); //Set ball.position to given vector, or default to centre
-    this.velocity = velocity || new Vector(0,0); //Set ball.velocity to given vector, or default to zero
+    this.position = position || new Vector(x0, y0); //Set ball.position to given vector, or default to centre
+    this.velocity = velocity || new Vector(0, 0); //Set ball.velocity to given vector, or default to zero
+
+    this.positionNormalised = new Vector(this.position.x, this.position.y);
+    this.normalisePosition();
+    this.velocityNormalised = new Vector(this.velocity.x, this.velocity.y);
+    this.normaliseVelocity();
     
     this.positionRadius = 0; //Initial position radius
     this.positionAngle = 0; //Initial position angle
@@ -364,7 +377,6 @@ function Ball(position, velocity, batton) {
 
 //Generic function to test for collision between a ball and a batton
 function testCollision(ball, batton) {
-    //TODO: Split test conditions, and add debug mode to log the cause of a miss
     //If within batton angle AND on our outside inner boundary (collision)
     var battonLeft = batton.angle + 0.5*batton.size;
     var battonRight = batton.angle - 0.5*batton.size;
@@ -394,7 +406,6 @@ Ball.prototype.move = function () {
     
     this.positionRadius = this.position.getRadius(); //Set radius calculated from position
     this.positionAngle = this.position.getAngle(); //Set position angle calculated from position
-    
     this.velocityRadius = this.velocity.getMagnitude(); //Set velocity magnitude calculated from velocity vector
     this.velocityAngle = this.velocity.getAnglev(); //Set velocity angle calculated from velocity vector
 
@@ -403,7 +414,29 @@ Ball.prototype.move = function () {
         this.position.x += speedScale*this.velocity.x;
         this.position.y += speedScale*this.velocity.y;
     }
+
+    //Normalised positions for rescaling canvas
+    this.positionNormalised.x = (this.position.x - x0)/R;
+    this.positionNormalised.y = (this.position.y - y0)/R;
+
+    //Normalised velocities for rescaling canvas
+    this.velocityNormalised.x = (this.velocity.x)/R;
+    this.velocityNormalised.y = (this.velocity.y)/R;
+
 };
+
+//Renormalise position accounting for changes in the canvas size
+Ball.prototype.normalisePosition = function () {
+    this.position.x = R*this.positionNormalised.x + x0;
+    this.position.y = R*this.positionNormalised.y + y0;
+}
+
+//Renormalise velocity accounting for changes in the canvas size
+Ball.prototype.normaliseVelocity = function () {
+    this.velocity.x = R*this.velocityNormalised.x;
+    this.velocity.y = R*this.velocityNormalised.y;
+    this.velocityRadius = this.velocity.getMagnitude()
+}
 
 // OUT OF BOUNDS HANDLING (GAME OVER)
 function bounds(ball) {
@@ -448,7 +481,7 @@ function collisions(ball, batton) {
             } 
                             
         } //For shallow angles
-        
+
         ball.velocity = GetVectorV(ball.velocityRadius, ball.velocityAngle); //Update velocity vector after collision, from magnitude and angle
         
         if (ball.positionRadius > R - ball.size){ //If position is greater than inner boundary
@@ -499,8 +532,7 @@ function loop(now) {
 
     //Check focus
     if (gameStarted && !gamePaused && (!document.hasFocus() || escKeyID in keysDown)) { //If started, not paused, and (not in focus or escape pressed)
-        soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game pausing)
-        gamePaused = true; 
+        pauseGame();
     }
 }
 
@@ -621,8 +653,8 @@ function update(ball, batton) {
     }
     
     else {  // If game has started
-        if (gameOver) { //If gameOver
 
+        if (gameOver) { //If gameOver
             //Stop ball motion
             ball.velocity.x = 0; //Reset vx
             ball.velocity.y = 0; //Reset vy
@@ -661,6 +693,11 @@ function update(ball, batton) {
             //BALL MOTION
             ball.move();
         }
+
+        //TODO: Fix velocity not rescaling when ball is moving. Possibly because velocityRadius isn't scaling properly
+        ball.normaliseVelocity();
+        ball.normalisePosition();
+        
     }
 }
 
@@ -707,10 +744,10 @@ function draw(ball, batton) { //DRAW FRAME
     //Gameover screen
     if (gameOver && !startTimerActive) {
         ctx.font = fontBig;
-        ctx.fillText("GAME OVER", x0, y0-80);
+        ctx.fillText("GAME OVER", x0, y0-(0.28*R));
 
         ctx.font = fontMedium;
-        ctx.fillText("SCORE: " + hits, x0, y0-50);
+        ctx.fillText("SCORE: " + hits, x0, y0-(0.14*R));
     }
 
     //Pause screen
@@ -718,17 +755,17 @@ function draw(ball, batton) { //DRAW FRAME
         ctx.textAlign="center"; 
 
         ctx.font = fontMedium;
-        ctx.fillText("TOUCH/ENTER TO START", x0, y0+60);
+        ctx.fillText("TOUCH/ENTER TO START", x0, y0+(0.18*R));
 
         if (pauseTimerActive) { //If unpause timer has started
             ctx.textAlign="center"; 
 
             ctx.font = fontTitle;
-            ctx.fillText(pauseTimerValue, x0, y0-80);
+            ctx.fillText(pauseTimerValue, x0, y0-(0.28*R));
         }
         else { //If paused, and unpause timer not started
             ctx.font = fontBig;
-            ctx.fillText("PAUSED", x0, y0-80);
+            ctx.fillText("PAUSED", x0, y0-(0.28*R));
         }
     }
     
