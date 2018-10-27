@@ -532,7 +532,7 @@ function loop(now) {
     level = Math.round((hits+5)/10);
     
     //Set speedScale by FPS and level increments
-    speedScale = fpsScale * difficulty(level, 2.6, 0.20);
+    speedScale = fpsScale * difficulty(level, 1.4, 0.3);
 
     //Check focus
     if (gameStarted && !gamePaused && (!document.hasFocus() || escKeyID in keysDown)) { //If started, not paused, and (not in focus or escape pressed)
@@ -610,20 +610,6 @@ var pauseTimerValue = 0; //Countdown value
 
 var gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
-// Logical test for death modes
-function stage(stage) {
-    return (10*stage < level && level <= 10*(stage+1))
-}
-
-function stageBelow(stage) {
-    return (level <= 10*(stage))
-}
-
-function stageAbove(stage) {
-    return (10*stage < level)
-}
-
-
 //Update objects
 function update(ball, batton) { 
 
@@ -688,8 +674,8 @@ function update(ball, batton) {
         else {  //If not gameover, and not paused
 
             // DEATH MODE
-            if (stage(3)) { // If in stage 2
-                batton.size = deathPaddle(level, 0.01, 0.4);
+            if (20 < level && level <= 30) { // If in stage 2
+                batton.size = deathPaddle(level-20, 0.01, 0.1);
             }
 
             //BATTON MOTION
@@ -734,16 +720,16 @@ function draw(ball, batton) { //DRAW FRAME
         ringColour = '#bc7a00';
     }
     else { //If game is running
-        if (stage(0)) {
+        if (level <= 5) {
             ringColour = '#00bca6';
         }
         else {
-            ringColour = '#505050';
+            ringColour = '#505050';  //Make decoration gray after level 10
         }
     }
     
-    // Draw ring if in stage 0
-    if (stage(0)) {
+    // Draw ring below level 6
+    if (level <= 5) {
         ctx.beginPath();
         ctx.arc(x0,y0,R,0,2*Math.PI);
         ctx.lineWidth = 0.01*R;
@@ -751,8 +737,8 @@ function draw(ball, batton) { //DRAW FRAME
         ctx.stroke();
     }
 
-    //Draw batton decoration below stage 2
-    if (stageBelow(2)) {
+    //Draw batton decoration below level 11
+    if (level <= 10) {
         ctx.beginPath();
         ctx.arc(x0, y0, 1.012*R, batton.angle-1.5*batton.size, batton.angle+1.5*batton.size);
         ctx.lineWidth = 0.025*R;
@@ -809,7 +795,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 6d", x0, y0-(0.14*R));
+                ctx.fillText("beta 7", x0, y0-(0.14*R));
             }
         }
         else {
