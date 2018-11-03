@@ -1,7 +1,4 @@
-//TODO: Try and override long press vibration on mobile
-//TODO: Scale text, batton, and ring line to ring radius
-//TODO: Add savedata system
-//TODO: Shiny up
+var VERSION = "gamma"
 
 //PWA STUFF
 //Register service worker
@@ -610,6 +607,34 @@ var pauseTimerValue = 0; //Countdown value
 
 var gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
 
+//Refresh score variables
+function refreshScores() {
+    monoDB.fetchScore("01", function(score) { //Fetch score stored in position "01" (high score)
+        topScore = score; //Write DB response to topScore variable
+    });
+}
+
+//Handle gameover
+function gameover(ball, batton) {
+    //Stop ball motion
+    ball.velocity.x = 0; //Reset vx
+    ball.velocity.y = 0; //Reset vy
+
+    //Clear keys down
+    keysDown = {}; 
+
+    //Clear flags
+    gameStarted = false; //Stop game
+    gameStartable = false; //Lock game out of starting
+
+    if (hits>topScore){ //If score beats current best
+        monoDB.updateScore("01", hits, function() { //Update score stored in position "01" (high score)
+            refreshScores()
+        })
+        //topScore = hits; //Update topScore
+    }
+}
+
 //Update objects
 function update(ball, batton) { 
 
@@ -645,21 +670,7 @@ function update(ball, batton) {
     else {  // If game has started
 
         if (gameOver) { //If gameOver
-            //Stop ball motion
-            ball.velocity.x = 0; //Reset vx
-            ball.velocity.y = 0; //Reset vy
-
-            //Clear keys down
-            keysDown = {}; 
-
-            //Clear flags
-            gameStarted = false; //Stop game
-            gameStartable = false; //Lock game out of starting
-
-            if (hits>topScore){ //If score beats current best
-                topScore = hits; //Update topScore
-            }
-            
+            gameover(ball, batton)
         }
 
         else if (gamePaused) {
@@ -795,7 +806,7 @@ function draw(ball, batton) { //DRAW FRAME
                 ctx.font = fontTitle;
                 ctx.fillText("MONOPONG", x0, y0-(0.28*R));
                 ctx.font = fontMedium;
-                ctx.fillText("beta 7", x0, y0-(0.14*R));
+                ctx.fillText(VERSION, x0, y0-(0.14*R));
             }
         }
         else {
@@ -846,5 +857,8 @@ function queue() { //GET NEW FRAME
     window.requestAnimationFrame(loop);
 }
 
-// Start the game
-loop(); //Run animation loop
+window.onload = function() {
+    // Start the game
+    monoDB.open(refreshScores);
+    loop(); //Run animation loop
+}

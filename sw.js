@@ -1,8 +1,9 @@
-var CACHE_NAME = 'MONOPONG-CACHE-B07';
+var CACHE_NAME = 'MONOPONG-CACHE-C01';
 var appShellFiles = [
   '/',
   '/index.html',
   '/monopong.js',
+  '/db.js',
   '/ping_pong_8bit_beeep.wav',
   '/ping_pong_8bit_peeeeeep.wav',
   '/ping_pong_8bit_plop.wav'
