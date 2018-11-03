@@ -1,2 +1,2 @@
 # monopong
-A lonely PWA game.
+A lonely PWA game. [monopong.app](https://monopong.app)
