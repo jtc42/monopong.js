@@ -8,7 +8,7 @@ import {
     difficulty
 } from './logic/basics.js'
 
-var VERSION = "gamma"
+var VERSION = "delta"
 
 //PWA STUFF
 //Register service worker
@@ -320,8 +320,8 @@ function draw(playarea) { //DRAW FRAME
     ctx.fillText("Highscore: " + playarea.topScore, (0.18 * playarea.R), (0.42 * playarea.R));
 
     // Debug
-    ctx.fillText("Batton: " + playarea.batton.angle, (0.18 * playarea.R), (0.54 * playarea.R));
-    ctx.fillText("Ball: " + playarea.ball.positionAngle + ", " + playarea.ball.positionRadius, (0.18 * playarea.R), (0.66 * playarea.R));
+    // ctx.fillText("Batton: " + playarea.batton.angle, (0.18 * playarea.R), (0.54 * playarea.R));
+    // ctx.fillText("Ball: " + playarea.ball.positionAngle + ", " + playarea.ball.positionRadius, (0.18 * playarea.R), (0.66 * playarea.R));
 }
 
 function queue() { //GET NEW FRAME
