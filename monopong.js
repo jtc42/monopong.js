@@ -1,12 +1,9 @@
 import {
-    Ball
-} from './objects/ball.js'
-import {
-    Batton
-} from './objects/batton.js'
-import {
     Vector
 } from './objects/vector.js'
+import {
+    PlayArea
+} from './objects/playarea.js'
 import {
     soundHit,
     soundShallow,
@@ -58,37 +55,6 @@ canvas.height = viewHeight * scale;
 
 // Normalize coordinate system to use css pixels.
 ctx.scale(scale, scale);
-
-class PlayArea {
-    constructor(viewWidth, viewHeight) {
-        this.calculateDims(viewWidth, viewHeight)
-
-        this.speedScale = 1; //Animation scalar
-
-        this.gameStartable = true; //Can the game be started? (After gameOver, all keys must be released for this to be 1)
-        this.gameStarted = false; //Game active
-        this.gameOver = false; //Has gameOver occured
-        this.gamePaused = false; //Game is paused
-
-        this.hits = 0; //Hit count
-        this.level = 0; //Iterates every 10 hits
-        this.topScore = 0; //High score
-
-        this.godMode = false; //Never lose god mode
-
-        this.keysDown = {}
-
-        // Game objects attached to playarea
-        this.batton = new Batton(this.R, 0.5 * Math.PI, this);
-        this.ball = new Ball(new Vector(this.x0, this.y0), new Vector(0, 0), this)
-    }
-    calculateDims(viewWidth, viewHeight) {
-        this.smallerDim = Math.min(viewWidth, viewHeight);
-        this.R = this.smallerDim / 2.3; //Circle Radius
-        this.x0 = 0.5 * viewWidth; //Centre x
-        this.y0 = 0.5 * viewHeight; //Centre y
-    }
-}
 
 const playareaMain = new PlayArea(viewWidth, viewHeight)
 
@@ -304,52 +270,44 @@ function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-//STARTS GAME
-function startgame(playarea) {
-    playarea.ball.velocity = new Vector(0.0, -0.024 * playarea.R); //Give ball an initial velocity
-    playarea.gameStarted = true; //Set game as started
-    playarea.gameOver = false; //Clear gameOver flag
-}
-
 //START GAME TIMER
 function startTimer(delay, step, playarea) {
-    startTimerValue = delay;
+    playarea.timerValue = delay;
     soundHit.play() //Play collision SFX
 
     console.log("STARTING TIMER")
     startTimerActive = true; //Flag startTimer as started
 
     var startTimer = setInterval(function () {
-        startTimerValue--;
-        if (startTimerValue <= 0) { //If at zero
+        playarea.timerValue--;
+        if (playarea.timerValue <= 0) { //If at zero
             startTimerActive = false; //Stop startTimer
             soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 
-            startgame(playarea)
+            playarea.startgame()
             console.log("PLAY")
             clearInterval(startTimer);
         } else { //If not zero
-            console.log(startTimerValue)
+            console.log(playarea.timerValue)
             soundHit.play() //Play collision SFX
         }
     }, step);
 }
 
 var startTimerActive = false; //Has countdown started
-var startTimerValue = 0; //Countdown value
 
 //UNPAUSE TIMER
 // TODO: Playarea method?
 function pauseTimer(delay, step, playarea) {
-    pauseTimerValue = delay;
+    playarea.timerValue = delay;
     soundHit.play() //Play collision SFX
 
     console.log("STARTING UNPAUSE TIMER")
     pauseTimerActive = true; //Flag startTimer as started
 
     var pauseTimer = setInterval(function () {
-        pauseTimerValue--;
-        if (pauseTimerValue <= 0) { //If at zero
+        playarea.timerValue--;
+        if (playarea.timerValue <= 0) { //If at zero
             pauseTimerActive = false; //Stop pauseTimer
             soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
 
@@ -357,7 +315,7 @@ function pauseTimer(delay, step, playarea) {
             console.log("PLAY")
             clearInterval(pauseTimer);
         } else { //If not zero
-            console.log(pauseTimerValue)
+            console.log(playarea.timerValue)
             soundHit.play() //Play collision SFX
         }
     }, step);
@@ -365,7 +323,6 @@ function pauseTimer(delay, step, playarea) {
 
 // TODO: Move to playarea
 var pauseTimerActive = false; //Has countdown started
-var pauseTimerValue = 0; //Countdown value
 
 //Refresh score variables
 function refreshScores() {
@@ -374,27 +331,6 @@ function refreshScores() {
     });
 }
 
-//Handle gameover
-function gameover(playarea) {
-    //Stop ball motion
-    playarea.ball.velocity.x = 0; //Reset vx
-    playarea.ball.velocity.y = 0; //Reset vy
-
-    //Clear keys down
-    playarea.keysDown = {};
-
-    //Clear flags
-    playarea.gameStarted = false; //Stop game
-    playarea.gameStartable = false; //Lock game out of starting
-
-    console.log("Updating stored scores")
-    if (playarea.hits > playarea.topScore) { //If score beats current best
-        monoDB.updateScore("01", playarea.hits, function () { //Update score stored in position "01" (high score)
-            refreshScores()
-        })
-    }
-    console.log("Stored score saved")
-}
 
 //Update objects
 function update(playarea) {
@@ -429,7 +365,7 @@ function update(playarea) {
     } else { // If game has started
 
         if (playarea.gameOver) { //If gameOver state is active
-            gameover(playarea)  // Run gameover function
+            playarea.gameOverHandler()  // Run gameover function
         } else if (playarea.gamePaused) {
             if (playarea.gameStarted && (enterKeyID in playarea.keysDown || leftKeyID in playarea.keysDown || rightKeyID in playarea.keysDown)) { // If game has started AND any key is pressed 
                 if (!pauseTimerActive) {
@@ -565,7 +501,7 @@ function draw(playarea) { //DRAW FRAME
         } else {
             ctx.font = fontTitle;
             ctx.textAlign = "center";
-            ctx.fillText(startTimerValue, playarea.x0, playarea.y0 - (0.28 * playarea.R));
+            ctx.fillText(playarea.timerValue, playarea.x0, playarea.y0 - (0.28 * playarea.R));
         }
     }
 
@@ -589,7 +525,7 @@ function draw(playarea) { //DRAW FRAME
             ctx.textAlign = "center";
 
             ctx.font = fontTitle;
-            ctx.fillText(pauseTimerValue, playarea.x0, playarea.y0 - (0.28 * playarea.R));
+            ctx.fillText(playarea.timerValue, playarea.x0, playarea.y0 - (0.28 * playarea.R));
         } else { //If paused, and unpause timer not started
             ctx.font = fontBig;
             ctx.fillText("PAUSED", playarea.x0, playarea.y0 - (0.28 * playarea.R));
