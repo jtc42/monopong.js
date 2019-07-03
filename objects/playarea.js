@@ -7,6 +7,14 @@ import {
 import {
     Vector
 } from './vector.js'
+import {
+    soundHit,
+    soundShallow,
+    soundMiss
+} from './sounds.js'
+import {
+    refreshScores
+} from '../logic/scores.js'
 
 export class PlayArea {
     constructor(viewWidth, viewHeight) {
@@ -24,6 +32,8 @@ export class PlayArea {
         this.topScore = 0; //High score
 
         this.timerValue = 0; // Value of any countdown timer
+        this.startTimerActive = false;
+        this.pauseTimerActive = false;
 
         this.godMode = false; //Never lose god mode
 
@@ -33,6 +43,9 @@ export class PlayArea {
         // TODO: Generalise to an array? Maybe just multiple battons and some non-mono ball logic?
         this.batton = new Batton(this.R, 0.5 * Math.PI, this);
         this.ball = new Ball(new Vector(this.x0, this.y0), new Vector(0, 0), this)
+
+        // Update scores
+        monoDB.open(() => refreshScores(this));
     }
     calculateDims(viewWidth, viewHeight) {
         this.smallerDim = Math.min(viewWidth, viewHeight);
@@ -44,25 +57,67 @@ export class PlayArea {
         //Stop ball motion
         this.ball.velocity.x = 0; //Reset vx
         this.ball.velocity.y = 0; //Reset vy
-    
+
         //Clear keys down
         this.keysDown = {};
-    
+
         //Clear flags
         this.gameStarted = false; //Stop game
         this.gameStartable = false; //Lock game out of starting
-    
+
         console.log("Updating stored scores")
         if (this.hits > this.topScore) { //If score beats current best
-            monoDB.updateScore("01", this.hits, function () { //Update score stored in position "01" (high score)
-                refreshScores()
-            })
+            monoDB.updateScore("01", this.hits, () => refreshScores(this))
         }
         console.log("Stored score saved")
     }
-    startgame() {
+    startGame() {
         this.ball.velocity = new Vector(0.0, -0.024 * this.R); //Give ball an initial velocity
         this.gameStarted = true; //Set game as started
         this.gameOver = false; //Clear gameOver flag
+    }
+    startGameTimer(delay, step) {
+        this.timerValue = delay;
+        soundHit.play() //Play collision SFX
+
+        console.log("STARTING TIMER")
+        this.startTimerActive = true; //Flag startTimer as started
+
+        var startTimer = setInterval(() => {
+            this.timerValue--;
+            if (this.timerValue <= 0) { //If at zero
+                this.startTimerActive = false; //Stop startTimer
+                soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+
+                this.startGame()
+                console.log("PLAY")
+                clearInterval(startTimer);
+            } else { //If not zero
+                console.log(this.timerValue)
+                soundHit.play() //Play collision SFX
+            }
+        }, step);
+    }
+    resumeGameTimer(delay, step) {
+        this.timerValue = delay;
+        soundHit.play() //Play collision SFX
+
+        console.log("STARTING UNPAUSE TIMER")
+        this.pauseTimerActive = true; //Flag startTimer as started
+
+        var pauseTimer = setInterval(() => {
+            this.timerValue--;
+            if (this.timerValue <= 0) { //If at zero
+                this.pauseTimerActive = false; //Stop pauseTimer
+                soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
+
+                this.gamePaused = false; //Unpause
+                console.log("PLAY")
+                clearInterval(pauseTimer);
+            } else { //If not zero
+                console.log(this.timerValue)
+                soundHit.play() //Play collision SFX
+            }
+        }, step);
     }
 }

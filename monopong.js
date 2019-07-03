@@ -21,6 +21,9 @@ import {
     GetVectorV,
     isEmpty
 } from './logic/basics.js'
+import {
+    refreshScores
+} from './logic/scores.js'
 
 var VERSION = "gamma"
 
@@ -156,6 +159,7 @@ canvas.addEventListener("touchend", function (e) {
 
 
 //Generic function to test for collision between a ball and a batton
+// TODO: Move to playarea method?
 function testCollision(playarea) {
     //If within batton angle AND on our outside inner boundary (collision)
     var battonLeft = playarea.batton.angle + 0.5 * playarea.batton.size;
@@ -181,6 +185,7 @@ function testCollision(playarea) {
 
 
 // COLLISION HANDLING
+// TODO: Move to playarea method?
 function collisionHandler(playarea) {
 
     if (testCollision(playarea)) { //If ball has colided with batton, or godMode is on
@@ -270,69 +275,8 @@ function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-//START GAME TIMER
-function startTimer(delay, step, playarea) {
-    playarea.timerValue = delay;
-    soundHit.play() //Play collision SFX
-
-    console.log("STARTING TIMER")
-    startTimerActive = true; //Flag startTimer as started
-
-    var startTimer = setInterval(function () {
-        playarea.timerValue--;
-        if (playarea.timerValue <= 0) { //If at zero
-            startTimerActive = false; //Stop startTimer
-            soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
-
-            playarea.startgame()
-            console.log("PLAY")
-            clearInterval(startTimer);
-        } else { //If not zero
-            console.log(playarea.timerValue)
-            soundHit.play() //Play collision SFX
-        }
-    }, step);
-}
-
-var startTimerActive = false; //Has countdown started
-
-//UNPAUSE TIMER
-// TODO: Playarea method?
-function pauseTimer(delay, step, playarea) {
-    playarea.timerValue = delay;
-    soundHit.play() //Play collision SFX
-
-    console.log("STARTING UNPAUSE TIMER")
-    pauseTimerActive = true; //Flag startTimer as started
-
-    var pauseTimer = setInterval(function () {
-        playarea.timerValue--;
-        if (playarea.timerValue <= 0) { //If at zero
-            pauseTimerActive = false; //Stop pauseTimer
-            soundMiss.play() //Play shallow collision SFX (for lack of a dedicated SFX for game starting)
-
-            playarea.gamePaused = false; //Unpause
-            console.log("PLAY")
-            clearInterval(pauseTimer);
-        } else { //If not zero
-            console.log(playarea.timerValue)
-            soundHit.play() //Play collision SFX
-        }
-    }, step);
-}
-
-// TODO: Move to playarea
-var pauseTimerActive = false; //Has countdown started
-
-//Refresh score variables
-function refreshScores() {
-    monoDB.fetchScore("01", function (score) { //Fetch score stored in position "01" (high score)
-        playareaMain.topScore = score; //Write DB response to topScore variable
-    });
-}
-
-
 //Update objects
+// TODO: Move to playarea method?
 function update(playarea) {
 
     if (!playarea.gameStarted) { //If game hasn't started
@@ -357,20 +301,20 @@ function update(playarea) {
             playarea.batton.angle = 0.5 * Math.PI; //Reset Batton
 
             //Start timer
-            if (!startTimerActive) { // If startTimer hasn't already started
-                startTimer(3, 1000, playarea) //Start startTimer
+            if (!playarea.startTimerActive) { // If startTimer hasn't already started
+                playarea.startGameTimer(3, 1000) //Start startTimer
             }
         }
 
     } else { // If game has started
 
         if (playarea.gameOver) { //If gameOver state is active
-            playarea.gameOverHandler()  // Run gameover function
+            playarea.gameOverHandler() // Run gameover function
         } else if (playarea.gamePaused) {
             if (playarea.gameStarted && (enterKeyID in playarea.keysDown || leftKeyID in playarea.keysDown || rightKeyID in playarea.keysDown)) { // If game has started AND any key is pressed 
-                if (!pauseTimerActive) {
+                if (!playarea.pauseTimerActive) {
                     console.log("STARTING UNPAUSE TIMER")
-                    pauseTimer(3, 500, playarea) //Start startTimer
+                    playarea.resumeGameTimer(3, 500) //Start startTimer
                 }
             }
         } else { //If not gameover, and not paused
@@ -414,12 +358,12 @@ function draw(playarea) { //DRAW FRAME
     playarea.ball.size = 0.032 * playarea.R;
 
     //Set ring colour
-    if (playarea.gameOver && !startTimerActive) { //If gameOver and startTimer not started
+    if (playarea.gameOver && !playarea.startTimerActive) { //If gameOver and startTimer not started
         // TODO: Ringcolour to playerea
         ringColour = '#FF0000';
-    } else if (playarea.gamePaused && !pauseTimerActive) {
+    } else if (playarea.gamePaused && !playarea.pauseTimerActive) {
         ringColour = '#FFFFFF';
-    } else if (startTimerActive || pauseTimerActive || (!playarea.gameOver && !playarea.gameStarted)) { //If any timer started, or not gameOver but game not started (ie first run)
+    } else if (playarea.startTimerActive || playarea.pauseTimerActive || (!playarea.gameOver && !playarea.gameStarted)) { //If any timer started, or not gameOver but game not started (ie first run)
         ringColour = '#bc7a00';
     } else { //If game is running
         if (playarea.level <= 5) {
@@ -472,7 +416,7 @@ function draw(playarea) { //DRAW FRAME
 
     //Batton
     ctx.beginPath();
-    ctx.arc(playarea.x0, playarea.y0, 1.015 * playarea.R, - playarea.batton.angle - 0.5 * playarea.batton.size, - playarea.batton.angle + 0.5 * playarea.batton.size);
+    ctx.arc(playarea.x0, playarea.y0, 1.015 * playarea.R, -playarea.batton.angle - 0.5 * playarea.batton.size, -playarea.batton.angle + 0.5 * playarea.batton.size);
     ctx.lineWidth = 0.035 * playarea.R;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
@@ -482,7 +426,7 @@ function draw(playarea) { //DRAW FRAME
 
         ctx.fillStyle = "#ffffff";
 
-        if (!startTimerActive) { //If countdown hasn't started
+        if (!playarea.startTimerActive) { //If countdown hasn't started
             ctx.textAlign = "center";
 
             ctx.font = fontMedium;
@@ -506,7 +450,7 @@ function draw(playarea) { //DRAW FRAME
     }
 
     //Gameover screen
-    if (playarea.gameOver && !startTimerActive) {
+    if (playarea.gameOver && !playarea.startTimerActive) {
         ctx.font = fontBig;
         ctx.fillText("GAME OVER", playarea.x0, playarea.y0 - (0.28 * playarea.R));
 
@@ -521,7 +465,7 @@ function draw(playarea) { //DRAW FRAME
         ctx.font = fontMedium;
         ctx.fillText("TOUCH/ENTER TO START", playarea.x0, playarea.y0 + (0.18 * playarea.R));
 
-        if (pauseTimerActive) { //If unpause timer has started
+        if (playarea.pauseTimerActive) { //If unpause timer has started
             ctx.textAlign = "center";
 
             ctx.font = fontTitle;
@@ -550,7 +494,5 @@ function queue() { //GET NEW FRAME
 }
 
 window.onload = function () {
-    // Start the game
-    monoDB.open(refreshScores);
     loop(); //Run animation loop
 }
