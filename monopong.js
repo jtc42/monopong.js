@@ -180,6 +180,19 @@ function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function regularPolygon(ctx, x, y, radius, sides) {
+    if (sides < 3) return;
+    ctx.beginPath();
+    var a = ((Math.PI * 2)/sides);
+    ctx.translate(x,y);
+    ctx.moveTo(radius,0);
+    for (var i = 1; i < sides; i++) {
+        ctx.lineTo(radius*Math.cos(a*i),radius*Math.sin(a*i));
+    }
+    ctx.closePath();
+    ctx.translate(-x,-y);
+}
+
 function draw(playarea) { //DRAW FRAME
 
     //Calculate text sizes
@@ -199,7 +212,7 @@ function draw(playarea) { //DRAW FRAME
     } else if (playarea.gamePaused && !playarea.pauseTimerActive) {
         ringColour = '#FFFFFF';
     } else if (playarea.startTimerActive || playarea.pauseTimerActive || (!playarea.gameOver && !playarea.gameStarted)) { //If any timer started, or not gameOver but game not started (ie first run)
-        ringColour = '#bc7a00';
+        ringColour = '#ff7700';
     } else { //If game is running
         if (playarea.level <= 5) {
             ringColour = '#00bca6';
@@ -214,7 +227,10 @@ function draw(playarea) { //DRAW FRAME
         ctx.arc(playarea.x0, playarea.y0, playarea.R, 0, 2 * Math.PI);
         ctx.lineWidth = 0.01 * playarea.R;
         ctx.strokeStyle = ringColour;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = ringColour;
         ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 
     //Draw batton decoration below level 11
@@ -243,15 +259,24 @@ function draw(playarea) { //DRAW FRAME
         ctx.globalAlpha = 1.0;
     }
 
+    // Draw hits decoration
+    // regularPolygon(ctx, playarea.x0, playarea.y0, 1.2 * playarea.R, playarea.hits%10);
+    // ctx.strokeStyle = '#ccc';
+    // ctx.shadowBlur = 0;
+    // ctx.stroke();
+
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
     ctx.arc(playarea.ball.position.x, playarea.ball.position.y, playarea.ball.size, 0, 2 * Math.PI, false);
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = ringColour;
     ctx.fill();
+    ctx.shadowBlur = 0;
 
     //Batton
     ctx.beginPath();
-    ctx.arc(playarea.x0, playarea.y0, 1.015 * playarea.R, -playarea.batton.angle - 0.5 * playarea.batton.size, -playarea.batton.angle + 0.5 * playarea.batton.size);
+    ctx.arc(playarea.x0, playarea.y0, 1.012 * playarea.R, -playarea.batton.angle - 0.5 * playarea.batton.size, -playarea.batton.angle + 0.5 * playarea.batton.size);
     ctx.lineWidth = 0.035 * playarea.R;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
