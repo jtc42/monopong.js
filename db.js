@@ -1,4 +1,4 @@
-var monoDB = (function() {
+export var monoDB = (function() {
     var mDB = {};
     var datastore = null;
 

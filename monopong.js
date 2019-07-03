@@ -1,29 +1,12 @@
 import {
-    Vector
-} from './objects/vector.js'
-import {
     PlayArea
 } from './objects/playarea.js'
 import {
-    soundHit,
-    soundShallow,
-    soundMiss
-} from './objects/sounds.js'
-import {
     leftKeyID,
     rightKeyID,
-    enterKeyID,
     escKeyID,
-    absolute,
-    cube,
-    difficulty,
-    GetVector,
-    GetVectorV,
-    isEmpty
+    difficulty
 } from './logic/basics.js'
-import {
-    refreshScores
-} from './logic/scores.js'
 
 var VERSION = "gamma"
 
@@ -61,17 +44,11 @@ ctx.scale(scale, scale);
 
 const playareaMain = new PlayArea(viewWidth, viewHeight)
 
-//General pause function
-function pauseGame(playarea) {
-    soundShallow.play() //Play shallow collision SFX (for lack of a dedicated SFX for game pausing)
-    playarea.gamePaused = true;
-}
-
 //Function to recalculate all dimensions
 function resizeCanvas() {
     //Pause game immediately
     if (playareaMain.gameStarted && !playareaMain.gamePaused) {
-        pauseGame(playareaMain)
+        playareaMain.pauseGame()
     }
 
     //Update view sizes
@@ -155,78 +132,6 @@ canvas.addEventListener("touchend", function (e) {
     }
 }, false);
 
-// BASIC FUNCTIONS
-
-
-//Generic function to test for collision between a ball and a batton
-// TODO: Move to playarea method?
-function testCollision(playarea) {
-    //If within batton angle AND on our outside inner boundary (collision)
-    var battonLeft = playarea.batton.angle + 0.5 * playarea.batton.size;
-    var battonRight = playarea.batton.angle - 0.5 * playarea.batton.size;
-
-    if (battonLeft > Math.PI) { //If left of batton is over the pi-line
-        var angleTest = (-Math.PI < playarea.ball.positionAngle && playarea.ball.positionAngle < battonLeft - 2 * Math.PI) || (battonRight < playarea.ball.positionAngle && playarea.ball.positionAngle < Math.PI)
-    } else if (battonRight < -Math.PI) { //If right of batton is under the pi-line
-        var angleTest = (-Math.PI < playarea.ball.positionAngle && playarea.ball.positionAngle < battonLeft) || (battonRight + 2 * Math.PI < playarea.ball.positionAngle && playarea.ball.positionAngle < Math.PI)
-    } else { //If away from the pi-line
-        var angleTest = battonRight < playarea.ball.positionAngle && playarea.ball.positionAngle < battonLeft;
-    }
-
-    var radiusTest = playarea.ball.positionRadius >= playarea.R - playarea.ball.size;
-
-    if (!playarea.godMode) { //If not in god mode
-        return (angleTest && radiusTest);
-    } else { //If in god mode
-        return radiusTest //Ignore angle test
-    }
-}
-
-
-
-// COLLISION HANDLING
-// TODO: Move to playarea method?
-function collisionHandler(playarea) {
-
-    if (testCollision(playarea)) { //If ball has colided with batton, or godMode is on
-
-        console.log("Collision detected!")
-        console.log(playarea.batton.direction)
-
-        if ((playarea.hits + 1) % 10 == 0) { //If going up a level
-            soundShallow.play() //Play shallow collision SFX
-        } else {
-            soundHit.play() //Play collision SFX
-        }
-
-        if ((absolute(Math.cos(playarea.ball.velocityAngle + playarea.ball.positionAngle))) > 0.5) { //For steep angles
-            //Calculate new physical velocity angle, plus component due to batton movement, plus small random component
-            console.log("Steep angle")
-            playarea.ball.velocityAngle = Math.PI - playarea.ball.velocityAngle - 2 * playarea.ball.positionAngle - playarea.batton.direction * 0.3 * cube(absolute(Math.cos(playarea.ball.velocityAngle + playarea.ball.positionAngle))) + (Math.random() - 0.5) * 0.2 * Math.PI;
-        } else { //For shallow angles
-            console.log("Shallow angle")
-            if (absolute(playarea.ball.positionAngle) > 0.6 * Math.PI) { //For left half
-                //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
-                playarea.ball.velocityAngle = Math.PI - playarea.ball.velocityAngle - 2 * playarea.ball.positionAngle - (playarea.ball.velocityAngle / absolute(playarea.ball.velocityAngle)) * (Math.random() * 0.5 * Math.PI + 0.3);
-            } else { //For right half
-                //Calculate new physical velocity angle, plus small random component opposing natural velocity (deflect away from edge)
-                playarea.ball.velocityAngle = Math.PI - playarea.ball.velocityAngle - 2 * playarea.ball.positionAngle + (playarea.ball.velocityAngle / absolute(playarea.ball.velocityAngle)) * (Math.random() * 0.5 * Math.PI + 0.3);
-            }
-
-        } //For shallow angles
-
-        console.log("Initial ball velocity: " + playarea.ball.velocity.vector())
-        playarea.ball.velocity = GetVectorV(playarea.ball.velocityRadius, playarea.ball.velocityAngle); //Update velocity vector after collision, from magnitude and angle
-        console.log("Final ball velocity: " + playarea.ball.velocity.vector())
-
-        if (playarea.ball.positionRadius > playarea.R - playarea.ball.size) { //If position is greater than inner boundary
-            playarea.ball.positionRadius = playarea.R - playarea.ball.size - playarea.ball.velocityRadius; //Set radius to within inner boundary (prevent getting stuck outside)
-            playarea.ball.position = GetVector(playarea.ball.positionRadius, playarea.ball.positionAngle, playarea.x0, playarea.y0); //Set new position in x and y
-        }
-
-        playarea.hits += 1; //Add one hit on collision
-    }
-}
 
 //FRAME RATE
 var lastAnimationFrameTime = 0,
@@ -250,8 +155,8 @@ function loop(now) {
 
     //Run main loop
     clear();
-    update(playareaMain); //Update all positions
-    collisionHandler(playareaMain); //Handle ball-batton collisions
+    playareaMain.update(); //Update all positions
+    playareaMain.collisionHandler(); //Handle ball-batton collisions
     draw(playareaMain); //Redraw in new positions
 
     queue();
@@ -266,82 +171,13 @@ function loop(now) {
 
     //Check focus
     if (playareaMain.gameStarted && !playareaMain.gamePaused && (!document.hasFocus() || escKeyID in playareaMain.keysDown)) { //If started, not paused, and (not in focus or escape pressed)
-        pauseGame(playareaMain);
+        playareaMain.pauseGame();
     }
 }
 
 //CLEAR CANVAS ON EVERY FRAME
 function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-//Update objects
-// TODO: Move to playarea method?
-function update(playarea) {
-
-    if (!playarea.gameStarted) { //If game hasn't started
-
-        if (!playarea.gameOver) { //If not on gameovger screen, keep recalculating ball center position
-            playarea.ball.position.x = playarea.x0; //Reset x
-            playarea.ball.position.y = playarea.y0; //Reset y
-        }
-
-        if (!playarea.gameStartable && isEmpty(playarea.keysDown)) { //If game isn't startable, wait for all keys to be released then make startable
-            playarea.gameStartable = true; //Make game startable once all keys have been let go of
-        }
-
-        if (playarea.gameStartable && (enterKeyID in playarea.keysDown || leftKeyID in playarea.keysDown || rightKeyID in playarea.keysDown)) { // If game is startable AND any key is pressed
-
-            //Reset game
-            playarea.ball.position.x = playarea.x0; //Reset x
-            playarea.ball.position.y = playarea.y0; //Reset y
-
-            playarea.hits = 0; //Reset score
-
-            playarea.batton.angle = 0.5 * Math.PI; //Reset Batton
-
-            //Start timer
-            if (!playarea.startTimerActive) { // If startTimer hasn't already started
-                playarea.startGameTimer(3, 1000) //Start startTimer
-            }
-        }
-
-    } else { // If game has started
-
-        if (playarea.gameOver) { //If gameOver state is active
-            playarea.gameOverHandler() // Run gameover function
-        } else if (playarea.gamePaused) {
-            if (playarea.gameStarted && (enterKeyID in playarea.keysDown || leftKeyID in playarea.keysDown || rightKeyID in playarea.keysDown)) { // If game has started AND any key is pressed 
-                if (!playarea.pauseTimerActive) {
-                    console.log("STARTING UNPAUSE TIMER")
-                    playarea.resumeGameTimer(3, 500) //Start startTimer
-                }
-            }
-        } else { //If not gameover, and not paused
-
-            // DEATH MODE
-            if (20 < playarea.level && playarea.level <= 30) { // If in stage 2
-                playarea.batton.size = deathPaddle(playarea.level - 20, 0.01, 0.1);
-            }
-
-            //BATTON MOTION
-            playarea.batton.move();
-            //BALL MOTION
-            playarea.ball.move();
-        }
-
-        //Rescale position and velocity if canvas dimensions change
-        playarea.ball.normaliseVelocity();
-        playarea.ball.normalisePosition();
-        /*
-        I'll be real here, the velocity rescaling works a treat if the game is paused when the resizing happens,
-        but for some reason, and I've no idea why, it doesn't work at all if you rescale while the game is active.
-        As a hacky solution that superficially looks like a feature, the resizeCanvas function, which gets
-        called any time the window is resized, also pauses the game automatically. This is genuinely useful on 
-        mobile, as screen rotation pauses the game, but that's a side effect of debugging laziness.
-        */
-
-    }
 }
 
 function draw(playarea) { //DRAW FRAME
@@ -359,7 +195,6 @@ function draw(playarea) { //DRAW FRAME
 
     //Set ring colour
     if (playarea.gameOver && !playarea.startTimerActive) { //If gameOver and startTimer not started
-        // TODO: Ringcolour to playerea
         ringColour = '#FF0000';
     } else if (playarea.gamePaused && !playarea.pauseTimerActive) {
         ringColour = '#FFFFFF';
