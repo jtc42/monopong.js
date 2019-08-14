@@ -269,10 +269,7 @@ function draw(playarea) { //DRAW FRAME
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
     ctx.arc(playarea.ball.position.x, playarea.ball.position.y, playarea.ball.size, 0, 2 * Math.PI, false);
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = ringColour;
     ctx.fill();
-    ctx.shadowBlur = 0;
 
     //Batton
     ctx.beginPath();
