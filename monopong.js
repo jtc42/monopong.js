@@ -227,10 +227,8 @@ function draw(playarea) { //DRAW FRAME
         ctx.arc(playarea.x0, playarea.y0, playarea.R, 0, 2 * Math.PI);
         ctx.lineWidth = 0.01 * playarea.R;
         ctx.strokeStyle = ringColour;
-        ctx.shadowBlur = 20;
         ctx.shadowColor = ringColour;
         ctx.stroke();
-        ctx.shadowBlur = 0;
     }
 
     //Draw batton decoration below level 11
