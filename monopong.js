@@ -91,48 +91,6 @@ if (document.addEventListener) {
     });
 }
 
-// HANDLE CONTROLS
-
-// Key IDs
-addEventListener("keydown", function (e) {
-    playareaMain.keysDown[e.keyCode] = true; //Add key to array
-}, false);
-
-addEventListener("keyup", function (e) {
-    delete playareaMain.keysDown[e.keyCode]; //Remove key from array
-}, false);
-
-
-// HANDLE TOUCH EVENTS
-
-// Get the position of a touch relative to the canvas
-function getTouchPos(canvasDom, touchEvent) {
-    var rect = canvasDom.getBoundingClientRect();
-    return {
-        x: touchEvent.touches[0].clientX - rect.left,
-        y: touchEvent.touches[0].clientY - rect.top
-    };
-}
-
-canvas.addEventListener("touchstart", function (e) {
-    mousePos = getTouchPos(canvas, e);
-    if (mousePos['x'] < x0) {
-        playareaMain.keysDown[leftKeyID] = true; //Add key to array (emulates a keyboard keypress)
-    } else {
-        playareaMain.keysDown[rightKeyID] = true; //Add key to array (emulates a keyboard keypress)
-    }
-
-}, false);
-
-canvas.addEventListener("touchend", function (e) {
-    if (mousePos['x'] < x0) {
-        delete playareaMain.keysDown[leftKeyID]; //Remove key from array (emulates a keyboard key release)
-    } else {
-        delete playareaMain.keysDown[rightKeyID]; //Remove key from array (emulates a keyboard key release)
-    }
-}, false);
-
-
 //FRAME RATE
 var lastAnimationFrameTime = 0,
     lastFpsUpdateTime = 0;
@@ -152,11 +110,9 @@ function calculateFps(now) {
 
 //ANIMATION SEQUENCE
 function loop(now) {
-
     //Run main loop
     clear();
     playareaMain.update(); //Update all positions
-    playareaMain.collisionHandler(); //Handle ball-batton collisions
     draw(playareaMain); //Redraw in new positions
 
     queue();
@@ -211,7 +167,7 @@ function draw(playarea) { //DRAW FRAME
         ringColour = '#FF0000';
     } else if (playarea.gamePaused && !playarea.pauseTimerActive) {
         ringColour = '#FFFFFF';
-    } else if (playarea.startTimerActive || playarea.pauseTimerActive || (!playarea.gameOver && !playarea.gameStarted)) { //If any timer started, or not gameOver but game not started (ie first run)
+    } else if (playarea.startTimerActive || playarea.pauseTimerActive || (!playarea.gameOver && !playarea.gameActive)) { //If any timer started, or not gameOver but game not started (ie first run)
         ringColour = '#ff7700';
     } else { //If game is running
         if (playarea.level <= 5) {
@@ -257,12 +213,6 @@ function draw(playarea) { //DRAW FRAME
         ctx.globalAlpha = 1.0;
     }
 
-    // Draw hits decoration
-    // regularPolygon(ctx, playarea.x0, playarea.y0, 1.2 * playarea.R, playarea.hits%10);
-    // ctx.strokeStyle = '#ccc';
-    // ctx.shadowBlur = 0;
-    // ctx.stroke();
-
     //Ball
     ctx.beginPath();
     ctx.fillStyle = '#ffffff';
@@ -277,7 +227,7 @@ function draw(playarea) { //DRAW FRAME
     ctx.stroke();
 
     //Title
-    if (!playarea.gameStarted) { //If game hasn't started
+    if (!playarea.gameActive) { //If game hasn't started
 
         ctx.fillStyle = "#ffffff";
 
