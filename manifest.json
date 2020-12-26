@@ -8,57 +8,57 @@
     "theme_color": "#202020",
     "icons": [
       {
-        "src": "/icon-48.png",
+        "src": "/monopong/icon-48.png",
         "sizes": "48x48",
         "type": "image/png"
       },
       {
-        "src": "/icon-72.png",
+        "src": "/monopong/icon-72.png",
         "sizes": "72x72",
         "type": "image/png"
       },
       {
-        "src": "/icon-76.png",
+        "src": "/monopong/icon-76.png",
         "sizes": "76x76",
         "type": "image/png"
       },
       {
-        "src": "/icon-96.png",
+        "src": "/monopong/icon-96.png",
         "sizes": "96x96",
         "type": "image/png"
       },
       {
-        "src": "/icon-120.png",
+        "src": "/monopong/icon-120.png",
         "sizes": "120x120",
         "type": "image/png"
       },
       {
-        "src": "/icon-144.png",
+        "src": "/monopong/icon-144.png",
         "sizes": "144x144",
         "type": "image/png"
       },
       {
-        "src": "/icon-152.png",
+        "src": "/monopong/icon-152.png",
         "sizes": "152x152",
         "type": "image/png"
       },
       {
-        "src": "/icon-180.png",
+        "src": "/monopong/icon-180.png",
         "sizes": "180x180",
         "type": "image/png"
       },
       {
-        "src": "/icon-192.png",
+        "src": "/monopong/icon-192.png",
         "sizes": "192x192",
         "type": "image/png"
       },
       {
-        "src": "/icon-512.png",
+        "src": "/monopong/icon-512.png",
         "sizes": "512x512",
         "type": "image/png"
       },
       {
-        "src": "/icon-1024.png",
+        "src": "/monopong/icon-1024.png",
         "sizes": "1024x1024",
         "type": "image/png"
       }
