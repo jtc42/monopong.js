@@ -1,2 +1,2 @@
 # monopong
-A lonely PWA game. [monopong.app](https://monopong.app)
+A lonely PWA game. [Play.](https://jtc42.github.io/monopong/)
