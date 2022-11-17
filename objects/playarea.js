@@ -174,7 +174,7 @@ export class PlayArea {
                 this.ball.velocityAngle = Math.PI - this.ball.velocityAngle - 2 * this.ball.positionAngle - this.batton.direction * 0.3 * cube(absolute(Math.cos(this.ball.velocityAngle + this.ball.positionAngle))) + (Math.random() - 0.5) * 0.2 * Math.PI;
             } else { //For shallow angles
                 console.log("Shallow angle")
-                if (absolute(this.ball.positionAngle) > 0.6 * Math.PI) { //For left half
+                if (absolute(this.ball.positionAngle) > 0.5 * Math.PI) { //For left half
                     //Calculate new physical velocity angle, minus small random component opposing natural velocity (deflect away from edge)
                     this.ball.velocityAngle = Math.PI - this.ball.velocityAngle - 2 * this.ball.positionAngle - (this.ball.velocityAngle / absolute(this.ball.velocityAngle)) * (Math.random() * 0.5 * Math.PI + 0.3);
                 } else { //For right half
